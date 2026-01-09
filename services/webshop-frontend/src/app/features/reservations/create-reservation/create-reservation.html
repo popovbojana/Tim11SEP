@@ -1,0 +1,89 @@
+<section class="page">
+  <div class="header">
+    <div>
+      <a class="backLink" [routerLink]="['/offers', offer()?.id ?? '']">← Offer</a>
+      <h1 class="title">Create reservation</h1>
+      <p class="subtitle">Choose dates and optional services, then confirm.</p>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="state stateError">
+      <p class="stateText">{{ errorMessage() }}</p>
+      <button class="btn btnPrimary" type="button" (click)="submit()">Try again</button>
+    </div>
+  } @else if (!isLoaded()) {
+    <!-- ništa -->
+  } @else if (!offer()) {
+    <div class="state">
+      <p class="stateText">Offer not found.</p>
+      <a class="btn btnSecondary" routerLink="/offers">Back to offers</a>
+    </div>
+  } @else {
+    <div class="card">
+      <div class="offerTop">
+        <div>
+          <h2 class="offerTitle">{{ offer()!.title }}</h2>
+          <p class="offerDesc">{{ offer()!.description }}</p>
+        </div>
+        <div class="pill">{{ offer()!.vehicle.type }}</div>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <h3 class="sectionTitle">Dates</h3>
+
+        <div class="fields">
+          <div class="field">
+            <label class="label">Start date</label>
+            <input class="input" type="date" formControlName="startDate" />
+            @if (form.controls.startDate.touched && form.controls.startDate.invalid) {
+              <div class="errorText">Start date is required.</div>
+            }
+          </div>
+
+          <div class="field">
+            <label class="label">End date</label>
+            <input class="input" type="date" formControlName="endDate" />
+            @if (form.controls.endDate.touched && form.controls.endDate.invalid) {
+              <div class="errorText">End date is required.</div>
+            }
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <h3 class="sectionTitle">Additional services</h3>
+
+        @if (offer()!.additionalServices.length === 0) {
+          <p class="muted">No additional services.</p>
+        } @else {
+          <div class="services">
+            @for (s of offer()!.additionalServices; track s.id) {
+              <label class="service">
+                <input
+                  class="checkbox"
+                  type="checkbox"
+                  [checked]="isServiceSelected(s.id)"
+                  (change)="toggleService(s.id)"
+                />
+
+                <div class="serviceBody">
+                  <div class="serviceTop">
+                    <div class="serviceName">{{ s.name }}</div>
+                    <div class="servicePrice">{{ s.pricePerDay }} €/day</div>
+                  </div>
+                  <div class="serviceDesc">{{ s.description }}</div>
+                </div>
+              </label>
+            }
+          </div>
+        }
+
+        <div class="footerActions">
+          <a class="btn btnSecondary" [routerLink]="['/offers', offer()!.id]">Back</a>
+          <button class="btn btnPrimary" type="submit">Confirm reservation</button>
+        </div>
+      </form>
+    </div>
+  }
+</section>

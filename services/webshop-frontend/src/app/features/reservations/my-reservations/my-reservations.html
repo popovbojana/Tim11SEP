@@ -1,0 +1,138 @@
+<section class="page">
+  <div class="header">
+    <div>
+      <h1 class="title">My reservations</h1>
+      <p class="subtitle">View your active reservations and history.</p>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button
+      class="tab"
+      type="button"
+      (click)="selectTab('ACTIVE')"
+      [class.active]="selectedTab() === 'ACTIVE'"
+    >
+      Active
+    </button>
+
+    <button
+      class="tab"
+      type="button"
+      (click)="selectTab('HISTORY')"
+      [class.active]="selectedTab() === 'HISTORY'"
+    >
+      History
+    </button>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="state stateError">
+      <p class="stateText">{{ errorMessage() }}</p>
+    </div>
+  } @else {
+
+    @if (selectedTab() === 'ACTIVE') {
+
+      @if (activeReservations() === null) {
+        <!-- ništa -->
+      } @else if (activeReservations()!.length === 0) {
+        <div class="state">
+          <p class="stateText">No active reservations.</p>
+          <a class="btn btnSecondary" routerLink="/offers">Browse offers</a>
+        </div>
+      } @else {
+        <div class="list">
+          @for (r of activeReservations()!; track r.id) {
+            <article class="card">
+              <div class="top">
+                <div>
+                  <h3 class="cardTitle">{{ r.offerTitle }}</h3>
+                  <p class="dates">{{ r.startDate }} → {{ r.endDate }}</p>
+                </div>
+
+                <div class="right">
+                  <span
+                    class="badge"
+                    [class.badgeCreated]="r.status === 'CREATED'"
+                    [class.badgeConfirmed]="r.status === 'CONFIRMED'"
+                  >
+                    {{ r.status }}
+                  </span>
+                  <div class="price">{{ r.totalPrice }} €</div>
+                </div>
+              </div>
+
+              <div class="meta">
+                <div class="metaRow">
+                  <span class="metaLabel">Status</span>
+                  <span class="metaValue">{{ r.status }}</span>
+                </div>
+                <div class="metaRow">
+                  <span class="metaLabel">Total</span>
+                  <span class="metaValue">{{ r.totalPrice }} €</span>
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+      }
+
+    } @else {
+
+      @if (historyReservations() === null) {
+        <!-- ništa -->
+      } @else if (historyReservations()!.length === 0) {
+        <div class="state">
+          <p class="stateText">No reservation history.</p>
+        </div>
+      } @else {
+        <div class="list">
+          @for (r of historyReservations()!; track r.id) {
+            <article class="card">
+              <div class="top">
+                <div>
+                  <h3 class="cardTitle">{{ r.offerTitle }}</h3>
+                  <p class="dates">{{ r.startDate }} → {{ r.endDate }}</p>
+                </div>
+
+                <div class="right">
+                  <span
+                    class="badge"
+                    [class.badgeCompleted]="r.status === 'COMPLETED'"
+                    [class.badgeCanceled]="r.status === 'CANCELED'"
+                    [class.badgeExpired]="r.status === 'EXPIRED'"
+                    [class.badgeCreated]="r.status === 'CREATED'"
+                    [class.badgeConfirmed]="r.status === 'CONFIRMED'"
+                  >
+                    {{ r.status }}
+                  </span>
+                  <div class="price">{{ r.totalPrice }} €</div>
+                </div>
+              </div>
+
+              <div class="meta">
+                <div class="metaRow">
+                  <span class="metaLabel">Status</span>
+                  <span class="metaValue">{{ r.status }}</span>
+                </div>
+                <div class="metaRow">
+                  <span class="metaLabel">Total</span>
+                  <span class="metaValue">{{ r.totalPrice }} €</span>
+                </div>
+
+                @if (r.paidAt) {
+                  <div class="metaRow">
+                    <span class="metaLabel">Paid at</span>
+                    <span class="metaValue">{{ r.paidAt }}</span>
+                  </div>
+                }
+              </div>
+            </article>
+          }
+        </div>
+      }
+
+    }
+  }
+</section>

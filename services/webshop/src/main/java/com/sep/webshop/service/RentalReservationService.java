@@ -75,7 +75,7 @@ public class RentalReservationService {
             throw new IllegalArgumentException("Start and end date are required.");
         }
 
-        if (request.getEndDate().isAfter(request.getStartDate())) {
+        if (request.getEndDate().isBefore(request.getStartDate())) {
             throw new IllegalArgumentException("End date must be after start date.");
         }
     }
