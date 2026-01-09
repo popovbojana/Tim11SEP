@@ -1,0 +1,47 @@
+<section class="authPage">
+  <div class="authCard">
+    <header class="authHeader">
+      <h4 class="authTitle">Create account</h4>
+      <p class="authSubtitle">Register to reserve vehicles and manage reservations.</p>
+    </header>
+
+    @if (error) {
+      <div class="alert">
+        {{ error }}
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="authForm">
+      <div class="row2">
+        <div class="field">
+          <label class="label" for="firstName">First name</label>
+          <input id="firstName" class="input" type="text" formControlName="firstName" />
+        </div>
+
+        <div class="field">
+          <label class="label" for="lastName">Last name</label>
+          <input id="lastName" class="input" type="text" formControlName="lastName" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label" for="email">Email</label>
+        <input id="email" class="input" type="email" formControlName="email" />
+      </div>
+
+      <div class="field">
+        <label class="label" for="password">Password</label>
+        <input id="password" class="input" type="password" formControlName="password" />
+      </div>
+
+      <button class="btnPrimary" type="submit" [disabled]="loading">
+        {{ loading ? 'Creating account...' : 'Register' }}
+      </button>
+
+      <p class="hint">
+        Already have an account?
+        <a class="link" routerLink="/auth/login">Login</a>
+      </p>
+    </form>
+  </div>
+</section>

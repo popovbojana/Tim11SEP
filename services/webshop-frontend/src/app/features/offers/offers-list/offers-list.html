@@ -1,0 +1,47 @@
+<section class="page">
+  @if (errorMessage()) {
+    <div class="state stateError">
+      <p class="stateText">{{ errorMessage() }}</p>
+      <button class="btn btnPrimary" type="button" (click)="loadOffers()">Retry</button>
+    </div>
+  } @else if (offers() === null) {
+  } @else if (offers()!.length === 0) {
+    <div class="state">
+      <p class="stateText">No offers available.</p>
+    </div>
+  } @else {
+    <div class="grid">
+      @for (offer of offers()!; track offer.id) {
+        <article class="card">
+          <div class="cardHeader">
+            <h3 class="cardTitle">{{ offer.title }}</h3>
+            <div class="pill">{{ offer.vehicle.type }}</div>
+          </div>
+
+          <p class="cardDesc">{{ offer.description }}</p>
+
+          <div class="meta">
+            <div class="metaRow">
+              <span class="metaLabel">Vehicle</span>
+              <span class="metaValue">{{ getVehicleLabel(offer) }}</span>
+            </div>
+
+            <div class="metaRow">
+              <span class="metaLabel">Base / day</span>
+              <span class="metaValue">{{ offer.basePricePerDay }} €</span>
+            </div>
+
+            <div class="metaRow">
+              <span class="metaLabel">Vehicle / day</span>
+              <span class="metaValue">{{ offer.vehicle.pricePerDay }} €</span>
+            </div>
+          </div>
+
+          <div class="cardFooter">
+            <a class="btn btnSecondary" [routerLink]="['/offers', offer.id]">View details</a>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>
