@@ -12,4 +12,5 @@ public interface MerchantRepository extends JpaRepository<Merchant, Long> {
     Optional<Merchant> findByMerchantKey(String merchantKey);
 
     boolean existsByMerchantKey(String merchantKey);
+
 }
