@@ -3,10 +3,11 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 
 import { OffersApi } from '../../../core/services/offers-api/offers-api';
-import { ReservationsApi } from '../../../core/services/reservations-api/reservations-api';
 
 import { RentalOffer } from '../../../shared/models/rental-offer';
 import { CreateReservationRequest } from '../../../shared/models/create-reservation-request';
+import { PaymentApi } from '../../../core/services/payment-api/payment-api';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-create-reservation',
@@ -28,7 +29,7 @@ export class CreateReservation implements OnInit {
     private route: ActivatedRoute,
     private fb: FormBuilder,
     private offersApi: OffersApi,
-    private reservationsApi: ReservationsApi
+    private paymentApi: PaymentApi
   ) {
     this.form = this.fb.nonNullable.group({
       startDate: ['', Validators.required],
@@ -97,9 +98,10 @@ export class CreateReservation implements OnInit {
       selectedAdditionalServiceIds: Array.from(this.selectedServiceIds()),
     };
 
-    this.reservationsApi.createReservation(payload).subscribe({
-      next: () => {
-        window.location.href = '/reservations';
+    this.paymentApi.initPayment(payload).subscribe({
+      next: (res) => {
+        console.log(res.redirectUrl);
+        window.location.href = environment.pspBaseUrl + res.redirectUrl;
       },
       error: () => {
         this.errorMessage.set('Reservation failed. Please try again.');

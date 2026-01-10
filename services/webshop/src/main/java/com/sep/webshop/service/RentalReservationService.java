@@ -45,7 +45,7 @@ public class RentalReservationService {
                 .offer(offer)
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
-                .status(ReservationStatus.CREATED)
+                .status(ReservationStatus.PENDING)
                 .totalPrice(total)
                 .build();
 

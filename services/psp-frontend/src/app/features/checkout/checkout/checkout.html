@@ -1,0 +1,18 @@
+<div class="page">
+  <h1>PSP Checkout</h1>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (!payment()) {
+    <p>Loading payment...</p>
+  } @else {
+    <p>Payment ID: <strong>{{ payment()!.id }}</strong></p>
+    <p>Amount: <strong>{{ payment()!.amount }}</strong></p>
+    <p>Status: <strong>{{ payment()!.status }}</strong></p>
+
+    <div class="actions">
+      <button type="button" (click)="payByCard()">Pay by Card</button>
+      <button type="button">Pay by QR</button>
+    </div>
+  }
+</div>
