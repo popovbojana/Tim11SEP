@@ -1,7 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
 import { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+
+
+export type PaymentMethod = 'CARD' | 'QR' | 'PAYPAL' | 'CRYPTO';
+
+export type UpdateMethodsPayload = {
+  methods: PaymentMethod[];
+};
 
 @Injectable({ providedIn: 'root' })
 export class MerchantApi {
@@ -9,9 +16,14 @@ export class MerchantApi {
 
   constructor(private http: HttpClient) {}
 
-  getMethods(merchantKey: string): Observable<string[]> {
-    return this.http.get<string[]>(
+  getMethods(merchantKey: string): Observable<PaymentMethod[]> {
+    return this.http.get<PaymentMethod[]>(
       `${this.baseUrl}/api/merchants/${merchantKey}/methods`
     );
   }
+
+  updateMethods(merchantKey: string, payload: { methods: PaymentMethod[] }) {
+  return this.http.put<void>(`${this.baseUrl}/api/merchants/${merchantKey}/methods`, payload);
+}
+
 }
