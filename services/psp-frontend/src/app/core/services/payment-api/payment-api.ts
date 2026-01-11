@@ -23,4 +23,11 @@ export class PaymentsApi {
       null
     );
   }
+
+  startQrPayment(paymentId: number) {
+    return this.http.post<StartPaymentResponse>(
+      `${this.baseUrl}/api/payments/${paymentId}/start/qr`,
+      null
+    );
+  }
 }

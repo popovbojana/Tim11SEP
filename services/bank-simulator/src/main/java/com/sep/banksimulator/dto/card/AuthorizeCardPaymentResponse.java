@@ -1,5 +1,6 @@
-package com.sep.banksimulator.dto;
+package com.sep.banksimulator.dto.card;
 
+import com.sep.banksimulator.dto.FailureReason;
 import lombok.*;
 
 import java.time.Instant;

@@ -1,7 +1,14 @@
 package com.sep.banksimulator.service;
 
 import com.sep.banksimulator.client.CardPaymentClient;
+import com.sep.banksimulator.client.QrPaymentClient;
 import com.sep.banksimulator.dto.*;
+import com.sep.banksimulator.dto.card.AuthorizeCardPaymentRequest;
+import com.sep.banksimulator.dto.card.AuthorizeCardPaymentResponse;
+import com.sep.banksimulator.dto.card.CardPaymentStatus;
+import com.sep.banksimulator.dto.qr.GenerateQrRequest;
+import com.sep.banksimulator.dto.qr.GenerateQrResponse;
+import com.sep.banksimulator.dto.qr.QrImageResponse;
 import com.sep.banksimulator.entity.BankPayment;
 import com.sep.banksimulator.entity.BankPaymentStatus;
 import com.sep.banksimulator.repository.BankPaymentRepository;
@@ -23,6 +30,7 @@ public class BankPaymentService {
     private final BankPaymentRepository bankPaymentRepository;
     private final RestTemplate restTemplate;
     private final CardPaymentClient cardPaymentClient;
+    private final QrPaymentClient qrServiceClient;
 
     @Transactional
     public InitBankPaymentResponse init(InitBankPaymentRequest request) {
@@ -41,6 +49,51 @@ public class BankPaymentService {
         return InitBankPaymentResponse.builder()
                 .bankPaymentId(saved.getId())
                 .redirectUrl("http://localhost:4400/checkout/" + saved.getId())
+                .build();
+    }
+
+    @Transactional
+    public InitBankPaymentResponse initQr(InitBankPaymentRequest request) {
+        BankPayment payment = BankPayment.builder()
+                .pspPaymentId(request.getPspPaymentId())
+                .amount(request.getAmount())
+                .currency(request.getCurrency())
+                .stan(request.getStan())
+                .pspTimestamp(request.getPspTimestamp())
+                .status(BankPaymentStatus.CREATED)
+                .createdAt(Instant.now())
+                .build();
+
+        BankPayment saved = bankPaymentRepository.save(payment);
+
+        return InitBankPaymentResponse.builder()
+                .bankPaymentId(saved.getId())
+                .redirectUrl("http://localhost:4400/qr-checkout/" + saved.getId())
+                .build();
+    }
+
+    @Transactional
+    public QrImageResponse getQr(Long bankPaymentId) {
+        BankPayment payment = bankPaymentRepository.findById(bankPaymentId)
+                .orElseThrow(() -> new IllegalArgumentException("Bank payment not found"));
+
+        GenerateQrRequest req = GenerateQrRequest.builder()
+                .bankPaymentId(payment.getId())
+                .pspPaymentId(payment.getPspPaymentId())
+                .amount(payment.getAmount())
+                .currency(payment.getCurrency())
+                .stan(payment.getStan())
+                .pspTimestamp(payment.getPspTimestamp().toString())
+                .build();
+
+        GenerateQrResponse res = qrServiceClient.generate(req);
+
+        if (res == null || res.getQrImageBase64() == null || res.getQrImageBase64().isBlank()) {
+            throw new IllegalStateException("QR service did not return image");
+        }
+
+        return QrImageResponse.builder()
+                .qrImageBase64(res.getQrImageBase64())
                 .build();
     }
 
@@ -75,7 +128,7 @@ public class BankPaymentService {
             payment.setStatus(BankPaymentStatus.ERROR);
             bankPaymentRepository.save(payment);
 
-            sendCallbackToPsp(payment, null);
+            sendCallbackToPsp(payment);
 
             return PSP_FINALIZE_URL + bankPaymentId;
         }
@@ -84,7 +137,7 @@ public class BankPaymentService {
             payment.setStatus(BankPaymentStatus.ERROR);
             bankPaymentRepository.save(payment);
 
-            sendCallbackToPsp(payment, null);
+            sendCallbackToPsp(payment);
 
             return PSP_FINALIZE_URL + bankPaymentId;
         }
@@ -100,12 +153,12 @@ public class BankPaymentService {
 
         bankPaymentRepository.save(payment);
 
-        sendCallbackToPsp(payment, authRes);
+        sendCallbackToPsp(payment);
 
         return PSP_FINALIZE_URL + bankPaymentId;
     }
 
-    private void sendCallbackToPsp(BankPayment payment, AuthorizeCardPaymentResponse authRes) {
+    private void sendCallbackToPsp(BankPayment payment) {
         BankCallbackRequest callback = BankCallbackRequest.builder()
                 .pspPaymentId(payment.getPspPaymentId())
                 .bankPaymentId(payment.getId())

@@ -81,7 +81,17 @@ export class Checkout {
   }
 
   payByQr(): void {
-    alert("qr code coming soon!")
+    const id = this.paymentId();
+    if (!id) return;
+
+    this.error.set(null);
+
+    this.pspPaymentsApi.startQrPayment(id).subscribe({
+      next: (res) => (
+        window.location.href = res.redirectUrl
+      ),
+      error: () => this.error.set('Failed to start card payment.'),
+    });
   }
 
   payByPaypal(): void {

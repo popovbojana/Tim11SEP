@@ -1,0 +1,34 @@
+<div class="page">
+  <div class="card">
+    <h1 class="title">Pay by QR code</h1>
+
+    @if (error()) {
+      <div class="error">{{ error() }}</div>
+    } @else {
+      <p class="subtitle">Scan the QR code to complete the payment.</p>
+
+      @if (loading()) {
+        <p class="loading">Loading QR code...</p>
+      } @else {
+        <div class="qrBox">
+          @if (qrImageSrc()) {
+            <img class="qrImage" [src]="qrImageSrc()!" alt="QR code" />
+          } @else {
+            <div class="qrPlaceholder"></div>
+          }
+        </div>
+      }
+
+      <div class="meta">
+        <div class="row">
+          <span class="label">Bank payment ID</span>
+          <span class="value">{{ bankPaymentId() }}</span>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" type="button" disabled>Start scan (coming next)</button>
+      </div>
+    }
+  </div>
+</div>
