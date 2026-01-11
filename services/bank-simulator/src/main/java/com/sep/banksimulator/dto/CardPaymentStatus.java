@@ -1,4 +1,4 @@
-package com.sep.cardpayment.dto;
+package com.sep.banksimulator.dto;
 
 public enum CardPaymentStatus {
     SUCCESS,

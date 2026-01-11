@@ -83,6 +83,8 @@ public class WebshopMapper {
                 .vehicle(toDTO(offer.getVehicle()))
                 .insurancePackage(toDTO(offer.getInsurancePackage()))
                 .additionalServices(toAdditionalServiceDTOs(offer.getAdditionalServices()))
+                .merchantOrderId(r.getMerchantOrderId())
+                .pspPaymentId(r.getPspPaymentId())
                 .build();
     }
 

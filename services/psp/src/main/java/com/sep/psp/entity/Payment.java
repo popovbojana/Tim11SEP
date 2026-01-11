@@ -57,4 +57,10 @@ public class Payment {
 
     @Column(nullable = false)
     private Instant pspTimestamp;
+
+    @Column(length = 64)
+    private String globalTransactionId;
+
+    private Instant acquirerTimestamp;
+
 }

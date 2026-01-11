@@ -5,9 +5,16 @@ import { Login } from './features/auth/login/login';
 import { Register } from './features/auth/register/register';
 import { MyReservations } from './features/reservations/my-reservations/my-reservations';
 import { CreateReservation } from './features/reservations/create-reservation/create-reservation';
+import { Success } from './features/payments/success/success';
+import { Failed } from './features/payments/failed/failed';
+import { Error } from './features/payments/error/error';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'offers' },
+
+  { path: 'payment/success', component: Success },
+  { path: 'payment/failed', component: Failed },
+  { path: 'payment/error', component: Error },
 
   { path: 'offers', component: OffersList },
   { path: 'offers/:id/reserve', component: CreateReservation },

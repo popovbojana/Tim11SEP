@@ -1,5 +1,7 @@
 package com.sep.cardpayment.dto;
 
+import com.sep.cardpayment.enums.CardPaymentStatus;
+import com.sep.cardpayment.enums.FailureReason;
 import lombok.*;
 
 import java.time.Instant;

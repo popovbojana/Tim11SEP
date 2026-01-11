@@ -1,4 +1,4 @@
-package com.sep.cardpayment.dto;
+package com.sep.cardpayment.enums;
 
 public enum FailureReason {
     INVALID_PAN,
@@ -6,5 +6,6 @@ public enum FailureReason {
     EXPIRED_CARD,
     INVALID_CVV,
     INVALID_HOLDER_NAME,
-    CURRENCY_NOT_SUPPORTED
+    CURRENCY_NOT_SUPPORTED,
+    UNSUPPORTED_CARD_BRAND
 }

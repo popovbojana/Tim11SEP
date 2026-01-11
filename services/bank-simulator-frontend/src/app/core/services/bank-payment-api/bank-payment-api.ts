@@ -13,10 +13,19 @@ export class BankPaymentApi {
 
   constructor(private http: HttpClient) {}
 
-  execute(bankPaymentId: number, success: boolean): Observable<RedirectResponse> {
+  execute(
+    bankPaymentId: number,
+    payload: {
+      pan: string;
+      securityCode: string;
+      cardHolderName: string;
+      expiry: string;
+    }
+  ): Observable<RedirectResponse> {
     return this.http.post<RedirectResponse>(
       `${this.baseUrl}/api/payments/${bankPaymentId}/execute`,
-      { success }
+      payload
     );
   }
+
 }

@@ -45,4 +45,7 @@ public class ReservationDTO {
 
     private List<AdditionalServiceDTO> additionalServices;
 
+    private String merchantOrderId;
+
+    private Long pspPaymentId;
 }

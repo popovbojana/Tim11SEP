@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-
 @RestController
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
@@ -20,18 +19,15 @@ public class BankPaymentController {
     private final BankPaymentService bankPaymentService;
 
     @PostMapping("/init")
-    public ResponseEntity<InitBankPaymentResponse> init(
-            @Valid @RequestBody InitBankPaymentRequest request
-    ) {
+    public ResponseEntity<InitBankPaymentResponse> init(@Valid @RequestBody InitBankPaymentRequest request) {
         return new ResponseEntity<>(bankPaymentService.init(request), HttpStatus.OK);
     }
 
     @PostMapping("/{id}/execute")
     public ResponseEntity<RedirectResponse> execute(
             @PathVariable Long id,
-            @RequestBody ExecuteBankPaymentRequest request
+            @Valid @RequestBody ExecuteBankPaymentRequest request
     ) {
-        return new ResponseEntity<>(new RedirectResponse(bankPaymentService.execute(id, request.isSuccess())), HttpStatus.OK);
+        return new ResponseEntity<>(new RedirectResponse(bankPaymentService.execute(id, request)), HttpStatus.OK);
     }
-
 }

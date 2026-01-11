@@ -1,5 +1,6 @@
 package com.sep.banksimulator.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 @Getter
@@ -9,6 +10,15 @@ import lombok.*;
 @Builder
 public class ExecuteBankPaymentRequest {
 
-    private boolean success;
+    @NotBlank
+    private String pan;
 
+    @NotBlank
+    private String securityCode;
+
+    @NotBlank
+    private String cardHolderName;
+
+    @NotBlank
+    private String expiry; // "MM/YY"
 }

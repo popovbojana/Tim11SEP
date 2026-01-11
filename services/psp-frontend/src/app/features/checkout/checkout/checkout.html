@@ -1,18 +1,55 @@
-<div class="page">
-  <h1>PSP Checkout</h1>
-
+<div class="checkout-page">
   @if (error()) {
-    <p class="error">{{ error() }}</p>
+    <div class="error-box">{{ error() }}</div>
   } @else if (!payment()) {
-    <p>Loading payment...</p>
+    <p class="loading">Preparing payment...</p>
   } @else {
-    <p>Payment ID: <strong>{{ payment()!.id }}</strong></p>
-    <p>Amount: <strong>{{ payment()!.amount }}</strong></p>
-    <p>Status: <strong>{{ payment()!.status }}</strong></p>
+    <div class="checkout-card">
+      <div class="amount-section">
+        <span class="label">Total to pay</span>
+        <span class="amount">
+          {{ payment()!.amount }}
+          <span class="currency">{{ payment()!.currency }}</span>
+        </span>
+      </div>
 
-    <div class="actions">
-      <button type="button" (click)="payByCard()">Pay by Card</button>
-      <button type="button">Pay by QR</button>
+      @if (!methods()) {
+        <p class="loading">Loading available payment methods...</p>
+      } @else {
+        <div class="payment-methods">
+          <p class="methods-title">Choose payment method</p>
+
+          @if (hasMethod('CARD')) {
+            <button type="button" class="method-btn primary" (click)="payByCard()">
+              Pay by Card
+            </button>
+          }
+
+          @if (hasMethod('QR')) {
+            <button type="button" class="method-btn primary" (click)="payByQr()">
+              Pay by QR code
+            </button>
+          }
+
+          @if (hasMethod('PAYPAL')) {
+            <button type="button" class="method-btn primary" (click)="payByPaypal()">
+              Pay with PayPal
+            </button>
+          }
+
+          @if (hasMethod('CRYPTO')) {
+            <button type="button" class="method-btn primary" (click)="payByCrypto()">
+              Pay with Crypto
+            </button>
+          }
+
+          @if ((methods() ?? []).length === 0) {
+            <div class="error-box">
+              No payment methods available for this merchant.
+            </div>
+          }
+        </div>
+      }
     </div>
   }
 </div>

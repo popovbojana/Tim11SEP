@@ -7,7 +7,8 @@ public final class Luhn {
 
     public static boolean isValid(String pan) {
         if (pan == null) return false;
-        String digits = pan.replaceAll("\\s+", "");
+
+        String digits = pan.replaceAll("\\D", "");
         if (!digits.matches("\\d{12,19}")) return false;
 
         int sum = 0;
