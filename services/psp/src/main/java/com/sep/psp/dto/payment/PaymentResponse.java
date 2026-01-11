@@ -1,6 +1,7 @@
 package com.sep.psp.dto.payment;
 
 import com.sep.psp.entity.PaymentStatus;
+import jakarta.persistence.Column;
 import lombok.*;
 
 @Data
@@ -13,10 +14,18 @@ public class PaymentResponse {
 
     private double amount;
 
+    private String currency;
+
     private PaymentStatus status;
 
     private String merchantKey;
 
     private String merchantOrderId;
+
+    private String successUrl;
+
+    private String failedUrl;
+
+    private String errorUrl;
 
 }

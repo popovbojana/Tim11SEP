@@ -33,6 +33,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers("/api/bank/callback").permitAll()
                         .requestMatchers("/api/payments/**").permitAll() //temporary
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated()

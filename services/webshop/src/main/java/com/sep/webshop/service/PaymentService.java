@@ -35,6 +35,7 @@ public class PaymentService {
                 .merchantKey(pspConfig.getMerchantKey())
                 .merchantOrderId(UUID.randomUUID().toString())
                 .amount(pendingReservation.getTotalPrice())
+                .currency("€")
                 .successUrl(successUrl)
                 .failedUrl(failedUrl)
                 .errorUrl(errorUrl)

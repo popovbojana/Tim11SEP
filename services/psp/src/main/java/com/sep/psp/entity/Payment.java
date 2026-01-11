@@ -27,6 +27,9 @@ public class Payment {
     @Column(nullable = false)
     private double amount;
 
+    @Column(nullable = false)
+    private String currency;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PaymentStatus status;
@@ -42,4 +45,16 @@ public class Payment {
 
     @Column(nullable = false, length = 2048)
     private String errorUrl;
+
+    @Column(name = "bank_payment_id")
+    private Long bankPaymentId;
+
+    @Column(length = 2048)
+    private String bankRedirectUrl;
+
+    @Column(nullable = false)
+    private String stan;
+
+    @Column(nullable = false)
+    private Instant pspTimestamp;
 }

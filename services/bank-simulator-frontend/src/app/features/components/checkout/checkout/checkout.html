@@ -1,0 +1,17 @@
+<div class="page">
+  <h1>Bank Checkout</h1>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else {
+    <p>
+      Bank Payment ID:
+      <strong>{{ bankPaymentId() }}</strong>
+    </p>
+
+    <div class="actions">
+      <button type="button" (click)="success()">Success</button>
+      <button type="button" (click)="fail()">Fail</button>
+    </div>
+  }
+</div>

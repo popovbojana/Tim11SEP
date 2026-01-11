@@ -50,6 +50,7 @@ export class Checkout {
 
     this.pspPaymentsApi.startCardPayment(id).subscribe({
       next: (res) => {
+        console.log(res.redirectUrl)
         window.location.href = res.redirectUrl;
       },
       error: () => this.error.set('Failed to start card payment.'),
