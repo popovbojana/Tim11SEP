@@ -1,0 +1,68 @@
+<section class="page">
+  <header class="pageHeader">
+    <div>
+      <h2 class="title">Merchant details</h2>
+      <p class="subtitle">View merchant info and choose payment methods.</p>
+    </div>
+
+    <a class="btnSecondary" routerLink="/psp/merchants">Back</a>
+  </header>
+
+  @if (loading()) {
+    <div class="card"><p class="muted">Loading...</p></div>
+  } @else {
+    <div class="card">
+      <div class="infoGrid">
+        <div class="infoBlock">
+          <div class="labelSmall">Name</div>
+          <div class="value">{{ merchant()?.name }}</div>
+        </div>
+
+        <div class="infoBlock">
+          <div class="labelSmall">Merchant ID</div>
+          <div class="value mono">{{ merchant()?.merchantId }}</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <h3 class="sectionTitle">Payment methods</h3>
+      <p class="sectionHint">Select at least one.</p>
+
+      @if (error()) {
+        <div class="alert">
+          {{ error() }}
+        </div>
+      }
+
+      @if (success()) {
+        <div class="success">
+          {{ success() }}
+        </div>
+      }
+
+      <div class="methodsGrid">
+        @for (m of methods; track m) {
+          <label class="methodItem">
+            <input
+              type="checkbox"
+              [checked]="isChecked(m)"
+              (change)="toggle(m)"
+              [disabled]="saving()"
+            />
+            <span class="methodText">{{ m }}</span>
+          </label>
+        }
+      </div>
+
+      <button
+        class="btnPrimary"
+        type="button"
+        (click)="save()"
+        [disabled]="saving()"
+      >
+        {{ saving() ? 'Saving...' : 'Save methods' }}
+      </button>
+    </div>
+  }
+</section>

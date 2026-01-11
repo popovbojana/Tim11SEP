@@ -1,0 +1,108 @@
+<section class="authPage">
+  <div class="authCard">
+    <header class="authHeader">
+      <div class="titleRow">
+        <div>
+          <h4 class="authTitle">Card payment</h4>
+          <p class="authSubtitle">Enter your card details to complete the payment.</p>
+        </div>
+
+        <div class="cardLogos" aria-label="Accepted cards">
+          <img
+            class="cardLogo"
+            [class.dim]="!isBrandActive('VISA')"
+            src="assets/visa.png"
+            alt="Visa"
+          />
+          <img
+            class="cardLogo"
+            [class.dim]="!isBrandActive('MASTERCARD')"
+            src="assets/mastercard.png"
+            alt="Mastercard"
+          />
+        </div>
+      </div>
+    </header>
+
+    @if (error) {
+      <div class="alert">
+        {{ error }}
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="authForm">
+      <div class="field">
+        <label class="label" for="cardHolderName">Card holder name</label>
+        <input
+          id="cardHolderName"
+          class="input"
+          type="text"
+          placeholder="JOHN DOE"
+          formControlName="cardHolderName"
+          autocomplete="cc-name"
+        />
+        @if (form.controls.cardHolderName.touched && form.controls.cardHolderName.invalid) {
+          <p class="fieldError">Card holder name is required.</p>
+        }
+      </div>
+
+      <div class="field">
+        <label class="label" for="pan">Card number</label>
+        <input
+          id="pan"
+          class="input monoInput"
+          type="text"
+          placeholder="4111 1111 1111 1111"
+          formControlName="pan"
+          autocomplete="cc-number"
+          inputmode="numeric"
+        />
+        @if (form.controls.pan.touched && form.controls.pan.invalid) {
+          <p class="fieldError">Card number is required.</p>
+        }
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label class="label" for="expiry">Expiry (MM/YY)</label>
+          <input
+            id="expiry"
+            class="input monoInput"
+            type="text"
+            placeholder="12/30"
+            formControlName="expiry"
+            autocomplete="cc-exp"
+            inputmode="numeric"
+          />
+          @if (form.controls.expiry.touched && form.controls.expiry.invalid) {
+            <p class="fieldError">Expiry is required.</p>
+          }
+        </div>
+
+        <div class="field">
+          <label class="label" for="securityCode">CVV</label>
+          <input
+            id="securityCode"
+            class="input monoInput"
+            type="password"
+            placeholder="123"
+            formControlName="securityCode"
+            autocomplete="cc-csc"
+            inputmode="numeric"
+          />
+          @if (form.controls.securityCode.touched && form.controls.securityCode.invalid) {
+            <p class="fieldError">CVV is required.</p>
+          }
+        </div>
+      </div>
+
+      <button class="btnPrimary" type="submit" [disabled]="loading">
+        {{ loading ? 'Processing...' : 'Pay' }}
+      </button>
+
+      <p class="hint">
+        We accept <strong>Visa</strong> and <strong>Mastercard</strong> only.
+      </p>
+    </form>
+  </div>
+</section>

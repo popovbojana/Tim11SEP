@@ -1,0 +1,30 @@
+<nav class="nav">
+  <a class="brand" routerLink="/offers">
+    <span class="brandAccent">Vehicle</span> Rental
+  </a>
+
+  <a class="link" routerLink="/offers" routerLinkActive="active">
+    Offers
+  </a>
+
+  @if (isLoggedIn()) {
+    <a class="link" routerLink="/reservations" routerLinkActive="active">
+      My reservations
+    </a>
+  }
+
+  <span class="spacer"></span>
+
+  @if (!isLoggedIn()) {
+    <a class="link" routerLink="/auth/login" routerLinkActive="active">
+      Login
+    </a>
+    <a class="link" routerLink="/auth/register" routerLinkActive="active">
+      Register
+    </a>
+  } @else {
+    <button class="link buttonLink" type="button" (click)="logout()">
+      Logout
+    </button>
+  }
+</nav>

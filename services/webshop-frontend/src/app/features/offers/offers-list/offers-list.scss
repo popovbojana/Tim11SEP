@@ -1,0 +1,162 @@
+.page {
+  display: block;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.title {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: -0.3px;
+}
+
+.subtitle {
+  margin: 6px 0 0 0;
+  color: #555;
+  font-size: 14px;
+}
+
+.state {
+  border: 1px solid #eaeaea;
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.stateError {
+  border-color: #f3c6c6;
+  background: #fff7f7;
+}
+
+.stateText {
+  margin: 0 0 10px 0;
+  color: #111;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 1000px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  border: 1px solid #eaeaea;
+  background: #fff;
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: -0.2px;
+}
+
+.pill {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #1e3a8a;
+  white-space: nowrap;
+}
+
+.cardDesc {
+  margin: 0;
+  color: #444;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.meta {
+  display: grid;
+  gap: 6px;
+  padding-top: 6px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.metaRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.metaLabel {
+  color: #666;
+  font-size: 12px;
+}
+
+.metaValue {
+  color: #111;
+  font-weight: 600;
+  font-size: 13px;
+  text-align: right;
+}
+
+.cardFooter {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 6px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.btnPrimary {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}
+
+.btnSecondary {
+  background: #fff;
+  color: #111;
+  border-color: #e5e5e5;
+}
+
+.btnSecondary:hover {
+  border-color: #cfcfcf;
+}

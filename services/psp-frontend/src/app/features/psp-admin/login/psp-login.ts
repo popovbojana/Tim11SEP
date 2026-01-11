@@ -1,0 +1,63 @@
+import { CommonModule } from '@angular/common';
+import { Component } from '@angular/core';
+import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { AuthApiService, LoginRequest } from '../../../core/services/auth-api/auth-api';
+import { TokenService } from '../../../core/services/token/token';
+
+
+@Component({
+  selector: 'app-psp-login',
+  standalone: true,
+  imports: [ReactiveFormsModule, CommonModule],
+  templateUrl: './psp-login.html',
+  styleUrl: './psp-login.scss'
+})
+export class PspLogin {
+  error: string | null = null;
+  loading = false;
+
+  form;
+
+  constructor(
+    private fb: FormBuilder,
+    private authApi: AuthApiService,
+    private tokenService: TokenService,
+    private router: Router
+  ) {
+    this.form = this.fb.nonNullable.group({
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', Validators.required],
+    });
+  }
+
+  submit(): void {
+    console.log('SUBMIT OKINUO');
+    console.log('FORM VALID?', this.form.valid);
+    console.log('PAYLOAD', this.form.getRawValue());
+
+    this.error = null;
+
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    this.loading = true;
+
+    const payload: LoginRequest = this.form.getRawValue();
+
+    this.authApi.login(payload).subscribe({
+      next: (res) => {
+        this.loading = false;
+        this.tokenService.setToken(res.token);
+        this.router.navigate(['/psp/merchants']); // PSP admin landing page
+      },
+      error: (err) => {
+  console.log('LOGIN ERROR FULL >>>', err);
+  this.loading = false;
+  this.error = JSON.stringify(err);
+},
+    });
+  }
+}

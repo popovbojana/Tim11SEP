@@ -1,0 +1,35 @@
+<section class="authPage">
+  <div class="authCard">
+    <header class="authHeader">
+      <h4 class="authTitle">Welcome back</h4>
+      <p class="authSubtitle">Sign in to reserve vehicles and manage reservations.</p>
+    </header>
+
+    @if (error) {
+      <div class="alert">
+        {{ error }}
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="authForm">
+      <div class="field">
+        <label class="label" for="email">Email</label>
+        <input id="email" class="input" type="email" formControlName="email" />
+      </div>
+
+      <div class="field">
+        <label class="label" for="password">Password</label>
+        <input id="password" class="input" type="password" formControlName="password" />
+      </div>
+
+      <button class="btnPrimary" type="submit" [disabled]="loading">
+        {{ loading ? 'Signing in...' : 'Login' }}
+      </button>
+
+      <p class="hint">
+        Don’t have an account?
+        <a class="link" routerLink="/auth/register">Register</a>
+      </p>
+    </form>
+  </div>
+</section>

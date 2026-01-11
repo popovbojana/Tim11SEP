@@ -1,0 +1,176 @@
+.page {
+  display: block;
+}
+
+.header {
+  margin-bottom: 14px;
+}
+
+.title {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: -0.3px;
+}
+
+.subtitle {
+  margin: 8px 0 0 0;
+  color: #555;
+  font-size: 14px;
+}
+
+.tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid #e5e5e5;
+  background: #fff;
+  margin-bottom: 14px;
+}
+
+.tab {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}
+
+.state {
+  border: 1px solid #eaeaea;
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.stateError {
+  border-color: #f3c6c6;
+  background: #fff7f7;
+}
+
+.stateText {
+  margin: 0 0 10px 0;
+}
+
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  color: #111;
+  text-decoration: none;
+}
+
+.list {
+  display: grid;
+  gap: 12px;
+}
+
+.card {
+  border: 1px solid #eaeaea;
+  background: #fff;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 16px;
+}
+
+.dates {
+  margin: 6px 0 0 0;
+  font-size: 13px;
+  color: #555;
+}
+
+.right {
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+  align-content: start;
+}
+
+.badge {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid #e5e5e5;
+  background: #fafafa;
+}
+
+.badgeCreated {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #475569;
+}
+
+.badgeConfirmed {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+  color: #1e3a8a;
+}
+
+.badgeCompleted {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #065f46;
+}
+
+.badgeCanceled {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #7f1d1d;
+}
+
+.badgeExpired {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+.meta {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+  display: grid;
+  gap: 6px;
+}
+
+.metaRow {
+  display: flex;
+  justify-content: space-between;
+}
+
+.metaLabel {
+  font-size: 12px;
+  color: #666;
+}
+
+.metaValue {
+  font-size: 12px;
+  font-weight: 800;
+}

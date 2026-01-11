@@ -1,0 +1,249 @@
+.page {
+  display: block;
+}
+
+.state {
+  border: 1px solid #eaeaea;
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.stateError {
+  border-color: #f3c6c6;
+  background: #fff7f7;
+}
+
+.stateText {
+  margin: 0 0 12px 0;
+  color: #111;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.backLink {
+  display: inline-block;
+  text-decoration: none;
+  color: #2563eb;
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.title {
+  margin: 0;
+  font-size: 24px;
+  letter-spacing: -0.4px;
+}
+
+.subtitle {
+  margin: 8px 0 0 0;
+  color: #555;
+  font-size: 14px;
+  line-height: 1.4;
+  max-width: 70ch;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.pill {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #1e3a8a;
+  white-space: nowrap;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 900px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .headerRight {
+    width: 100%;
+  }
+}
+
+@media (max-width: 700px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  border: 1px solid #eaeaea;
+  background: #fff;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+}
+
+.cardFull {
+  grid-column: 1 / -1;
+}
+
+.sectionTitle {
+  margin: 0 0 10px 0;
+  font-size: 15px;
+  letter-spacing: -0.2px;
+}
+
+.meta {
+  display: grid;
+  gap: 6px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 10px;
+}
+
+.metaRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.metaLabel {
+  color: #666;
+  font-size: 12px;
+}
+
+.metaValue {
+  color: #111;
+  font-weight: 700;
+  font-size: 13px;
+  text-align: right;
+}
+
+.muted {
+  margin: 0;
+  color: #555;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.services {
+  display: grid;
+  gap: 10px;
+}
+
+.service {
+  border: 1px solid #f0f0f0;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.serviceTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.serviceName {
+  font-weight: 700;
+  color: #111;
+}
+
+.servicePrice {
+  font-weight: 700;
+  color: #111;
+  white-space: nowrap;
+}
+
+.serviceDesc {
+  color: #555;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.pricing {
+  display: grid;
+  gap: 8px;
+}
+
+.pricingRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+}
+
+.pricingLabel {
+  color: #555;
+  font-size: 13px;
+}
+
+.pricingValue {
+  font-weight: 800;
+  color: #111;
+  white-space: nowrap;
+}
+
+.footerActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.btnPrimary {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}
+
+.btnSecondary {
+  background: #fff;
+  color: #111;
+  border-color: #e5e5e5;
+}
+
+.btnSecondary:hover {
+  border-color: #cfcfcf;
+}
