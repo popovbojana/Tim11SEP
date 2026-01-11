@@ -1,0 +1,57 @@
+<section class="resultPage">
+  <div class="resultCard success">
+    <div class="topRow">
+      <div>
+        <h1 class="title">Payment successful</h1>
+        <p class="subtitle">
+          Your transaction has been completed successfully. Your reservation is ready.
+        </p>
+      </div>
+      <div class="badgeIcon">✓</div>
+    </div>
+
+    @if (loading()) {
+      <p class="loading">Loading reservation details...</p>
+    } @else if (error()) {
+      <div class="alert">{{ error() }}</div>
+    } @else if (reservation()) {
+      <div class="box">
+        <div class="kv">
+          <div class="k">Reservation</div>
+          <div class="v mono">#{{ reservation()!.id }}</div>
+
+          <div class="k">Offer</div>
+          <div class="v">{{ reservation()!.offerTitle }}</div>
+
+          <div class="k">Dates</div>
+          <div class="v">
+            {{ formatDateOnly(reservation()!.startDate) }}
+            →
+            {{ formatDateOnly(reservation()!.endDate) }}
+          </div>
+
+          <div class="k">Total</div>
+          <div class="v">{{ reservation()!.totalPrice }} €</div>
+
+          <div class="k">Payment method</div>
+          <div class="v">{{ reservation()!.paymentMethod }}</div>
+
+          <div class="k">Payment reference</div>
+          <div class="v mono">
+            {{ reservation()!.paymentReference ?? '-' }}
+          </div>
+
+          <div class="k">Paid at</div>
+          <div class="v">
+            {{ formatDateTime(reservation()!.paidAt) }}
+          </div>
+        </div>
+      </div>
+    }
+
+    <div class="actions">
+      <a class="btnPrimary" routerLink="/reservations">Go to My reservations</a>
+      <a class="btnSecondary" routerLink="/offers">Back to offers</a>
+    </div>
+  </div>
+</section>

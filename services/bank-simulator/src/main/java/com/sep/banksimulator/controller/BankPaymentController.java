@@ -1,28 +1,33 @@
 package com.sep.banksimulator.controller;
 
+import com.sep.banksimulator.dto.ExecuteBankPaymentRequest;
+import com.sep.banksimulator.dto.InitBankPaymentRequest;
 import com.sep.banksimulator.dto.InitBankPaymentResponse;
+import com.sep.banksimulator.dto.RedirectResponse;
+import com.sep.banksimulator.service.BankPaymentService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 @RestController
 @RequestMapping("/api/payments")
+@RequiredArgsConstructor
 public class BankPaymentController {
 
-    private static final AtomicLong SEQ = new AtomicLong(1);
+    private final BankPaymentService bankPaymentService;
 
     @PostMapping("/init")
-    public ResponseEntity<InitBankPaymentResponse> init() {
-        long id = SEQ.getAndIncrement();
+    public ResponseEntity<InitBankPaymentResponse> init(@Valid @RequestBody InitBankPaymentRequest request) {
+        return new ResponseEntity<>(bankPaymentService.init(request), HttpStatus.OK);
+    }
 
-        String redirectUrl = "http://localhost:8080/bank-simulator/bank/checkout/" + id;
-
-        return ResponseEntity.ok(
-                InitBankPaymentResponse.builder()
-                        .bankPaymentId(id)
-                        .redirectUrl(redirectUrl)
-                        .build()
-        );
+    @PostMapping("/{id}/execute")
+    public ResponseEntity<RedirectResponse> execute(
+            @PathVariable Long id,
+            @Valid @RequestBody ExecuteBankPaymentRequest request
+    ) {
+        return new ResponseEntity<>(new RedirectResponse(bankPaymentService.execute(id, request)), HttpStatus.OK);
     }
 }

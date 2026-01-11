@@ -27,4 +27,9 @@ public class RentalReservationController {
         return new ResponseEntity<>(reservationService.getActiveReservations(authentication.getName()), HttpStatus.OK);
     }
 
+    @GetMapping(value = "/{id}")
+    public ResponseEntity<ReservationDTO> getById(@PathVariable Long id) {
+        return new ResponseEntity<>(reservationService.getById(id), HttpStatus.OK);
+    }
+
 }

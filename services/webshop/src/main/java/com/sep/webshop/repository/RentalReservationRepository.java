@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface RentalReservationRepository extends JpaRepository<RentalReservation, Long> {
@@ -17,4 +18,7 @@ public interface RentalReservationRepository extends JpaRepository<RentalReserva
     @EntityGraph(attributePaths = {"offer", "offer.vehicle", "offer.insurancePackage", "offer.additionalServices"})
     List<RentalReservation> findAllByCustomerEmailAndStatusInOrderByCreatedAtDesc(String customerEmail, List<ReservationStatus> statuses);
 
+    Optional<RentalReservation> findById(Long id);
+
+    Optional<RentalReservation> findByMerchantOrderId(String merchantOrderId);
 }

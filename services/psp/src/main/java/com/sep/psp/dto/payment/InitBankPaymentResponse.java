@@ -1,4 +1,4 @@
-package com.sep.psp.dto.auth;
+package com.sep.psp.dto.payment;
 
 import lombok.*;
 

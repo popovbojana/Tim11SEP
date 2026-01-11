@@ -48,4 +48,9 @@ public class RentalReservation {
     private String paymentReference;
 
     private Instant paidAt;
+
+    @Column(nullable = false, unique = true)
+    private String merchantOrderId;
+
+    private Long pspPaymentId;
 }

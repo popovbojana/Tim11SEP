@@ -15,6 +15,8 @@ public class InitPaymentRequest {
 
     private double amount;
 
+    private String currency;
+
     private String successUrl;
 
     private String failedUrl;

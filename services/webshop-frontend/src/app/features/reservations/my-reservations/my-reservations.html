@@ -48,7 +48,9 @@
               <div class="top">
                 <div>
                   <h3 class="cardTitle">{{ r.offerTitle }}</h3>
-                  <p class="dates">{{ r.startDate }} → {{ r.endDate }}</p>
+                  <p class="dates">
+                    {{ formatDateOnly(r.startDate) }} → {{ formatDateOnly(r.endDate) }}
+                  </p>
                 </div>
 
                 <div class="right">
@@ -59,15 +61,10 @@
                   >
                     {{ r.status }}
                   </span>
-                  <div class="price">{{ r.totalPrice }} €</div>
                 </div>
               </div>
 
               <div class="meta">
-                <div class="metaRow">
-                  <span class="metaLabel">Status</span>
-                  <span class="metaValue">{{ r.status }}</span>
-                </div>
                 <div class="metaRow">
                   <span class="metaLabel">Total</span>
                   <span class="metaValue">{{ r.totalPrice }} €</span>
@@ -93,7 +90,9 @@
               <div class="top">
                 <div>
                   <h3 class="cardTitle">{{ r.offerTitle }}</h3>
-                  <p class="dates">{{ r.startDate }} → {{ r.endDate }}</p>
+                  <p class="dates">
+                    {{ formatDateOnly(r.startDate) }} → {{ formatDateOnly(r.endDate) }}
+                  </p>
                 </div>
 
                 <div class="right">
@@ -104,18 +103,14 @@
                     [class.badgeExpired]="r.status === 'EXPIRED'"
                     [class.badgeCreated]="r.status === 'CREATED'"
                     [class.badgeConfirmed]="r.status === 'CONFIRMED'"
+                    [class.badgePending]="r.status === 'PENDING'"
                   >
                     {{ r.status }}
                   </span>
-                  <div class="price">{{ r.totalPrice }} €</div>
                 </div>
               </div>
 
               <div class="meta">
-                <div class="metaRow">
-                  <span class="metaLabel">Status</span>
-                  <span class="metaValue">{{ r.status }}</span>
-                </div>
                 <div class="metaRow">
                   <span class="metaLabel">Total</span>
                   <span class="metaValue">{{ r.totalPrice }} €</span>
@@ -124,7 +119,7 @@
                 @if (r.paidAt) {
                   <div class="metaRow">
                     <span class="metaLabel">Paid at</span>
-                    <span class="metaValue">{{ r.paidAt }}</span>
+                    <span class="metaValue">{{ formatDateTime(r.paidAt) }}</span>
                   </div>
                 }
               </div>

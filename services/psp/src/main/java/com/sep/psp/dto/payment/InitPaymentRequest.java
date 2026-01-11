@@ -23,6 +23,9 @@ public class InitPaymentRequest {
     private Double amount;
 
     @NotBlank
+    private String currency;
+
+    @NotBlank
     private String successUrl;
 
     @NotBlank
