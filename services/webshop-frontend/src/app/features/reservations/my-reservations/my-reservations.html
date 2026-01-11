@@ -70,6 +70,20 @@
                   <span class="metaValue">{{ r.totalPrice }} €</span>
                 </div>
               </div>
+
+              @if (r.paidAt && r.status !== 'CANCELED' && r.status !== 'EXPIRED') {
+                  <div class="metaRow">
+                    <span class="metaLabel">Paid at</span>
+                    <span class="metaValue">{{ formatDateTime(r.paidAt) }}</span>
+                  </div>
+                }
+
+                @if (r.paymentMethod && r.status !== 'CANCELED' && r.status !== 'EXPIRED') {
+                  <div class="metaRow">
+                    <span class="metaLabel">Payment method</span>
+                    <span class="metaValue">{{ r.paymentMethod }}</span>
+                  </div>
+                }
             </article>
           }
         </div>
@@ -78,7 +92,6 @@
     } @else {
 
       @if (historyReservations() === null) {
-        <!-- ništa -->
       } @else if (historyReservations()!.length === 0) {
         <div class="state">
           <p class="stateText">No reservation history.</p>
@@ -116,19 +129,20 @@
                   <span class="metaValue">{{ r.totalPrice }} €</span>
                 </div>
 
-                @if (r.paidAt) {
+                @if (r.paidAt && r.status !== 'CANCELED' && r.status !== 'EXPIRED') {
                   <div class="metaRow">
                     <span class="metaLabel">Paid at</span>
                     <span class="metaValue">{{ formatDateTime(r.paidAt) }}</span>
                   </div>
                 }
 
-                @if (r.paymentMethod) {
+                @if (r.paymentMethod && r.status !== 'CANCELED' && r.status !== 'EXPIRED') {
                   <div class="metaRow">
                     <span class="metaLabel">Payment method</span>
                     <span class="metaValue">{{ r.paymentMethod }}</span>
                   </div>
                 }
+
               </div>
             </article>
           }

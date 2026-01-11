@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -25,6 +26,8 @@ public class BankPaymentService {
 
     private static final String PSP_CALLBACK_URL = "http://localhost:8080/psp/api/bank/callback";
     private static final String PSP_FINALIZE_URL = "http://localhost:8080/psp/api/payments/finalize/";
+
+    private static final Duration CARD_PAYMENT_TIMEOUT = Duration.ofMinutes(1);
 
     private static final String QR_CURRENCY = "RSD";
     private static final String RECEIVER_ACCOUNT = "840000003275384578";
@@ -169,6 +172,16 @@ public class BankPaymentService {
             throw new IllegalStateException("Bank payment already finished: " + payment.getStatus());
         }
 
+        if (isExpired(payment)) {
+            payment.setStatus(BankPaymentStatus.FAILED);
+            bankPaymentRepository.save(payment);
+
+            sendCallbackToPsp(payment);
+
+            return PSP_FINALIZE_URL + bankPaymentId;
+        }
+
+
         payment.setStatus(BankPaymentStatus.IN_PROGRESS);
         bankPaymentRepository.save(payment);
 
@@ -235,4 +248,10 @@ public class BankPaymentService {
         } catch (RestClientException ignored) {
         }
     }
+
+    private boolean isExpired(BankPayment p) {
+        if (p.getCreatedAt() == null) return false;
+        return Duration.between(p.getCreatedAt(), Instant.now()).compareTo(CARD_PAYMENT_TIMEOUT) > 0;
+    }
+
 }

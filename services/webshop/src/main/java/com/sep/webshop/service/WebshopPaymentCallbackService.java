@@ -42,6 +42,7 @@ public class WebshopPaymentCallbackService {
 
         if ("SUCCESS".equalsIgnoreCase(paymentStatus)) return ReservationStatus.CONFIRMED;
         if ("FAILED".equalsIgnoreCase(paymentStatus)) return ReservationStatus.CANCELED;
+        if ("CANCELED".equalsIgnoreCase(paymentStatus)) return ReservationStatus.EXPIRED;
         return ReservationStatus.CANCELED;
     }
 
