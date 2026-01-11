@@ -1,9 +1,8 @@
 package com.sep.banksimulator.client;
 
-import com.sep.banksimulator.dto.AuthorizeCardPaymentRequest;
-import com.sep.banksimulator.dto.AuthorizeCardPaymentResponse;
+import com.sep.banksimulator.dto.card.AuthorizeCardPaymentRequest;
+import com.sep.banksimulator.dto.card.AuthorizeCardPaymentResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 

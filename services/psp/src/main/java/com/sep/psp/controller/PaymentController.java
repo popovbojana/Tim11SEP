@@ -33,9 +33,13 @@ public class PaymentController {
         return new ResponseEntity<>(paymentService.startCardPayment(id), HttpStatus.OK);
     }
 
+    @PostMapping("/{id}/start/qr")
+    public ResponseEntity<StartPaymentResponse> startQrPayment(@PathVariable Long id) {
+        return new ResponseEntity<>(paymentService.startQrPayment(id), HttpStatus.OK);
+    }
+
     @GetMapping("/finalize/{bankPaymentId}")
     public ResponseEntity<Void> finalizeByBankPaymentId(@PathVariable Long bankPaymentId) {
         return ResponseEntity.status(302).headers(paymentService.finalize(bankPaymentId)).build();
     }
-
 }

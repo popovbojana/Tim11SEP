@@ -3,7 +3,6 @@ package com.sep.psp.service;
 import com.sep.psp.client.BankClient;
 import com.sep.psp.client.WebshopClient;
 import com.sep.psp.dto.payment.*;
-import com.sep.psp.dto.payment.WebshopPaymentCallbackRequest;
 import com.sep.psp.entity.Payment;
 import com.sep.psp.entity.PaymentStatus;
 import com.sep.psp.repository.PaymentRepository;
@@ -50,6 +49,15 @@ public class PaymentService {
 
     @Transactional
     public StartPaymentResponse startCardPayment(Long paymentId) {
+        return startBankPayment(paymentId, "CARD");
+    }
+
+    @Transactional
+    public StartPaymentResponse startQrPayment(Long paymentId) {
+        return startBankPayment(paymentId, "QR");
+    }
+
+    private StartPaymentResponse startBankPayment(Long paymentId, String method) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
 
@@ -79,7 +87,11 @@ public class PaymentService {
 
         InitBankPaymentResponse bankInit;
         try {
-            bankInit = bankClient.initBankPayment(bankReq);
+            if ("QR".equalsIgnoreCase(method)) {
+                bankInit = bankClient.initBankQrPayment(bankReq);
+            } else {
+                bankInit = bankClient.initBankPayment(bankReq);
+            }
         } catch (Exception e) {
             payment.setStatus(PaymentStatus.ERROR);
             paymentRepository.save(payment);
@@ -160,6 +172,11 @@ public class PaymentService {
         paymentRepository.save(payment);
 
         if (isFinal(payment.getStatus())) {
+            String method = "CARD";
+            if (payment.getBankRedirectUrl() != null && payment.getBankRedirectUrl().toLowerCase().contains("/qr")) {
+                method = "QR";
+            }
+
             webshopClient.sendPaymentCallback(
                     WebshopPaymentCallbackRequest.builder()
                             .merchantOrderId(payment.getMerchantOrderId())
@@ -167,7 +184,7 @@ public class PaymentService {
                             .status(payment.getStatus().name())
                             .paymentReference(payment.getGlobalTransactionId())
                             .paidAt(payment.getStatus() == PaymentStatus.SUCCESS ? Instant.now() : null)
-                            .paymentMethod("CARD")
+                            .paymentMethod(method)
                             .build()
             );
         }

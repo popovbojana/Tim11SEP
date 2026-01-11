@@ -12,11 +12,15 @@ import org.springframework.web.client.RestTemplate;
 public class BankClient {
 
     private final RestTemplate restTemplate;
-
     private final BankConfig bankConfig;
 
     public InitBankPaymentResponse initBankPayment(InitBankPaymentRequest request) {
         String url = bankConfig.getBaseUrl() + "/api/payments/init";
+        return restTemplate.postForObject(url, request, InitBankPaymentResponse.class);
+    }
+
+    public InitBankPaymentResponse initBankQrPayment(InitBankPaymentRequest request) {
+        String url = bankConfig.getBaseUrl() + "/api/payments/init/qr";
         return restTemplate.postForObject(url, request, InitBankPaymentResponse.class);
     }
 
