@@ -1,5 +1,6 @@
 package com.sep.banksimulator.dto.qr;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 @Getter
@@ -7,9 +8,9 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class QrImageResponse {
+public class ConfirmQrPaymentRequest {
 
-    private String qrImageBase64;
-
+    @NotBlank
     private String qrText;
+
 }

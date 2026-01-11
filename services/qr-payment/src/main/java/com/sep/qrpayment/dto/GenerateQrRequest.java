@@ -24,9 +24,20 @@ public class GenerateQrRequest {
     private String currency;
 
     @NotBlank
+    private String receiverAccount;
+
+    @NotBlank
+    private String receiverName;
+
+    private String paymentCode;
+
+    private String purpose;
+
+    private String referenceNumber;
+
+    @NotBlank
     private String stan;
 
     @NotBlank
     private String pspTimestamp;
-
 }

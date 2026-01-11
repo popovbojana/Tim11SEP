@@ -1,34 +1,47 @@
-<div class="page">
-  <div class="card">
-    <h1 class="title">Pay by QR code</h1>
+<section class="authPage">
+  <div class="authCard">
+    <header class="authHeader">
+      <div class="titleRow">
+        <div>
+          <h4 class="authTitle">Pay by QR code</h4>
+          <p class="authSubtitle">
+            Scan the QR code using your mobile banking app to complete the payment.
+          </p>
+        </div>
+      </div>
+    </header>
 
     @if (error()) {
-      <div class="error">{{ error() }}</div>
-    } @else {
-      <p class="subtitle">Scan the QR code to complete the payment.</p>
-
-      @if (loading()) {
-        <p class="loading">Loading QR code...</p>
-      } @else {
-        <div class="qrBox">
-          @if (qrImageSrc()) {
-            <img class="qrImage" [src]="qrImageSrc()!" alt="QR code" />
-          } @else {
-            <div class="qrPlaceholder"></div>
-          }
-        </div>
-      }
-
-      <div class="meta">
-        <div class="row">
-          <span class="label">Bank payment ID</span>
-          <span class="value">{{ bankPaymentId() }}</span>
-        </div>
-      </div>
-
-      <div class="actions">
-        <button class="btn" type="button" disabled>Start scan (coming next)</button>
+      <div class="alert">
+        {{ error() }}
       </div>
     }
+
+    @if (loading()) {
+      <p class="loading">Loading QR code...</p>
+    } @else {
+      <div class="qrBox">
+        @if (qrImageSrc()) {
+          <img class="qrImage" [src]="qrImageSrc()!" alt="QR code" />
+        } @else {
+          <div class="qrPlaceholder"></div>
+        }
+      </div>
+    }
+
+    <div class="actions">
+      <button
+        class="btnPrimary"
+        type="button"
+        (click)="scanAndPay()"
+        [disabled]="confirming() || !qrText()"
+      >
+        {{ confirming() ? 'Processing...' : 'Scan & Pay' }}
+      </button>
+    </div>
+
+    @if (confirming()) {
+      <p class="hint">Processing payment, please wait…</p>
+    }
   </div>
-</div>
+</section>

@@ -7,10 +7,12 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class GenerateQrRequest {
+public class ValidateQrRequest {
+
+    private String qrText;
 
     private Long bankPaymentId;
-
+    
     private Long pspPaymentId;
 
     private Double amount;
@@ -28,6 +30,4 @@ public class GenerateQrRequest {
     private String referenceNumber;
 
     private String stan;
-
-    private String pspTimestamp;
 }

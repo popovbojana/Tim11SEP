@@ -6,9 +6,7 @@ import com.sep.banksimulator.dto.*;
 import com.sep.banksimulator.dto.card.AuthorizeCardPaymentRequest;
 import com.sep.banksimulator.dto.card.AuthorizeCardPaymentResponse;
 import com.sep.banksimulator.dto.card.CardPaymentStatus;
-import com.sep.banksimulator.dto.qr.GenerateQrRequest;
-import com.sep.banksimulator.dto.qr.GenerateQrResponse;
-import com.sep.banksimulator.dto.qr.QrImageResponse;
+import com.sep.banksimulator.dto.qr.*;
 import com.sep.banksimulator.entity.BankPayment;
 import com.sep.banksimulator.entity.BankPaymentStatus;
 import com.sep.banksimulator.repository.BankPaymentRepository;
@@ -19,6 +17,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +25,13 @@ public class BankPaymentService {
 
     private static final String PSP_CALLBACK_URL = "http://localhost:8080/psp/api/bank/callback";
     private static final String PSP_FINALIZE_URL = "http://localhost:8080/psp/api/payments/finalize/";
+
+    private static final String QR_CURRENCY = "RSD";
+    private static final String RECEIVER_ACCOUNT = "840000003275384578";
+    private static final String RECEIVER_NAME = "Vehicle Rental d.o.o.";
+    private static final String PURPOSE = "Vehicle reservation";
+    private static final String PAYMENT_CODE = "289";
+    private static final String REFERENCE_NUMBER = null;
 
     private final BankPaymentRepository bankPaymentRepository;
     private final RestTemplate restTemplate;
@@ -81,7 +87,12 @@ public class BankPaymentService {
                 .bankPaymentId(payment.getId())
                 .pspPaymentId(payment.getPspPaymentId())
                 .amount(payment.getAmount())
-                .currency(payment.getCurrency())
+                .currency(QR_CURRENCY)
+                .receiverAccount(RECEIVER_ACCOUNT)
+                .receiverName(RECEIVER_NAME)
+                .purpose(PURPOSE)
+                .paymentCode(PAYMENT_CODE)
+                .referenceNumber(REFERENCE_NUMBER)
                 .stan(payment.getStan())
                 .pspTimestamp(payment.getPspTimestamp().toString())
                 .build();
@@ -94,7 +105,57 @@ public class BankPaymentService {
 
         return QrImageResponse.builder()
                 .qrImageBase64(res.getQrImageBase64())
+                .qrText(res.getQrText())
                 .build();
+    }
+
+    @Transactional
+    public String confirmQr(Long bankPaymentId, ConfirmQrPaymentRequest request) {
+        BankPayment payment = bankPaymentRepository.findById(bankPaymentId)
+                .orElseThrow(() -> new IllegalArgumentException("Bank payment not found"));
+
+        if (payment.getStatus() == BankPaymentStatus.SUCCESS
+                || payment.getStatus() == BankPaymentStatus.FAILED
+                || payment.getStatus() == BankPaymentStatus.ERROR) {
+            throw new IllegalStateException("Bank payment already finished: " + payment.getStatus());
+        }
+
+        payment.setStatus(BankPaymentStatus.IN_PROGRESS);
+        bankPaymentRepository.save(payment);
+
+        ValidateQrRequest validateReq = ValidateQrRequest.builder()
+                .qrText(request.getQrText())
+                .bankPaymentId(payment.getId())
+                .pspPaymentId(payment.getPspPaymentId())
+                .amount(payment.getAmount())
+                .currency(QR_CURRENCY)
+                .receiverAccount(RECEIVER_ACCOUNT)
+                .receiverName(RECEIVER_NAME)
+                .purpose(PURPOSE)
+                .paymentCode(PAYMENT_CODE)
+                .referenceNumber(REFERENCE_NUMBER)
+                .stan(payment.getStan())
+                .build();
+
+        ValidateQrResponse validateRes = qrServiceClient.validate(validateReq);
+
+        if (validateRes == null || !validateRes.isValid()) {
+            payment.setStatus(BankPaymentStatus.FAILED);
+            bankPaymentRepository.save(payment);
+
+            sendCallbackToPsp(payment);
+
+            return PSP_FINALIZE_URL + bankPaymentId;
+        }
+
+        payment.setStatus(BankPaymentStatus.SUCCESS);
+        payment.setGlobalTransactionId(UUID.randomUUID().toString());
+        payment.setAcquirerTimestamp(Instant.now());
+        bankPaymentRepository.save(payment);
+
+        sendCallbackToPsp(payment);
+
+        return PSP_FINALIZE_URL + bankPaymentId;
     }
 
     @Transactional

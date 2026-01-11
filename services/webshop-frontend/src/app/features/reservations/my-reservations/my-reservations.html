@@ -122,6 +122,13 @@
                     <span class="metaValue">{{ formatDateTime(r.paidAt) }}</span>
                   </div>
                 }
+
+                @if (r.paymentMethod) {
+                  <div class="metaRow">
+                    <span class="metaLabel">Payment method</span>
+                    <span class="metaValue">{{ r.paymentMethod }}</span>
+                  </div>
+                }
               </div>
             </article>
           }

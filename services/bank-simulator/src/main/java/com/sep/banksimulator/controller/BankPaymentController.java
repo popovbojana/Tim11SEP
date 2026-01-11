@@ -1,10 +1,8 @@
 package com.sep.banksimulator.controller;
 
-import com.sep.banksimulator.dto.ExecuteBankPaymentRequest;
-import com.sep.banksimulator.dto.InitBankPaymentRequest;
-import com.sep.banksimulator.dto.InitBankPaymentResponse;
+import com.sep.banksimulator.dto.*;
+import com.sep.banksimulator.dto.qr.ConfirmQrPaymentRequest;
 import com.sep.banksimulator.dto.qr.QrImageResponse;
-import com.sep.banksimulator.dto.RedirectResponse;
 import com.sep.banksimulator.service.BankPaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +30,14 @@ public class BankPaymentController {
     @GetMapping("/{id}/qr")
     public ResponseEntity<QrImageResponse> getQr(@PathVariable Long id) {
         return new ResponseEntity<>(bankPaymentService.getQr(id), HttpStatus.OK);
+    }
+
+    @PostMapping("/{id}/qr/confirm")
+    public ResponseEntity<RedirectResponse> confirmQr(
+            @PathVariable Long id,
+            @Valid @RequestBody ConfirmQrPaymentRequest request
+    ) {
+        return new ResponseEntity<>(new RedirectResponse(bankPaymentService.confirmQr(id, request)), HttpStatus.OK);
     }
 
     @PostMapping("/{id}/execute")

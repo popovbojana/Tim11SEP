@@ -7,9 +7,10 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class QrImageResponse {
+public class ValidateQrResponse {
 
-    private String qrImageBase64;
+    private boolean valid;
 
-    private String qrText;
+    private String reason;
+
 }
