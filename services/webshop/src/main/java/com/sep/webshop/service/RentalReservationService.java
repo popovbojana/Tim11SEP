@@ -2,16 +2,14 @@ package com.sep.webshop.service;
 
 import com.sep.webshop.dto.CreateReservationRequest;
 import com.sep.webshop.dto.ReservationDTO;
-import com.sep.webshop.entity.AdditionalService;
-import com.sep.webshop.entity.RentalOffer;
-import com.sep.webshop.entity.RentalReservation;
-import com.sep.webshop.entity.ReservationStatus;
+import com.sep.webshop.entity.*;
 import com.sep.webshop.repository.RentalOfferRepository;
 import com.sep.webshop.repository.RentalReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Set;
@@ -25,7 +23,7 @@ public class RentalReservationService {
     private final RentalReservationRepository rentalReservationRepository;
 
     @Transactional
-    public ReservationDTO create(CreateReservationRequest request, String customerEmail) {
+    public ReservationDTO create(CreateReservationRequest request, String customerEmail, String merchantOrderId) {
         validateDates(request);
 
         RentalOffer offer = rentalOfferRepository.findByIdAndActiveTrue(request.getOfferId())
@@ -47,9 +45,34 @@ public class RentalReservationService {
                 .endDate(request.getEndDate())
                 .status(ReservationStatus.PENDING)
                 .totalPrice(total)
+                .merchantOrderId(merchantOrderId)
                 .build();
 
         return WebshopMapper.toDTO(rentalReservationRepository.save(reservation));
+    }
+
+    @Transactional(readOnly = true)
+    public ReservationDTO getById(Long id) {
+        return WebshopMapper.toDTO(rentalReservationRepository.getReferenceById(id));
+    }
+
+    @Transactional
+    public void updateFromPaymentCallback(String merchantOrderId, Long pspPaymentId, ReservationStatus newStatus,
+                                          PaymentMethod method, String reference, Instant paidAt) {
+
+        RentalReservation r = rentalReservationRepository.findByMerchantOrderId(merchantOrderId)
+                .orElseThrow(() -> new IllegalArgumentException("Reservation not found for merchantOrderId=" + merchantOrderId));
+
+        if (pspPaymentId != null) {
+            r.setPspPaymentId(pspPaymentId);
+        }
+
+        r.setStatus(newStatus);
+        r.setPaymentMethod(method);
+        r.setPaymentReference(reference);
+        r.setPaidAt(paidAt);
+
+        rentalReservationRepository.save(r);
     }
 
     @Transactional(readOnly = true)
@@ -70,21 +93,16 @@ public class RentalReservationService {
                 .toList();
     }
 
-    private static void validateDates(CreateReservationRequest request) {
+    private void validateDates(CreateReservationRequest request) {
         if (request.getStartDate() == null || request.getEndDate() == null) {
-            throw new IllegalArgumentException("Start and end date are required.");
-        }
-
-        if (request.getEndDate().isBefore(request.getStartDate())) {
-            throw new IllegalArgumentException("End date must be after start date.");
+            throw new IllegalArgumentException("Start and end dates are required.");
         }
     }
 
-    private static double calculateAdditionalPricePerDay(RentalOffer offer, Set<Long> selectedIds) {
-        if (selectedIds == null || selectedIds.isEmpty()) return 0.0;
-
+    private double calculateAdditionalPricePerDay(RentalOffer offer, Set<Long> selectedAdditionalServiceIds) {
+        if (selectedAdditionalServiceIds == null || selectedAdditionalServiceIds.isEmpty()) return 0.0;
         return offer.getAdditionalServices().stream()
-                .filter(s -> selectedIds.contains(s.getId()))
+                .filter(s -> selectedAdditionalServiceIds.contains(s.getId()))
                 .mapToDouble(AdditionalService::getPricePerDay)
                 .sum();
     }

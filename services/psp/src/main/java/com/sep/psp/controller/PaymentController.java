@@ -25,11 +25,17 @@ public class PaymentController {
 
     @GetMapping("/{id}")
     public ResponseEntity<PaymentResponse> getPayment(@PathVariable Long id) {
-        return ResponseEntity.ok(paymentService.getPayment(id));
+        return new ResponseEntity<>(paymentService.getPayment(id), HttpStatus.OK);
     }
 
     @PostMapping("/{id}/start/card")
     public ResponseEntity<StartPaymentResponse> startCardPayment(@PathVariable Long id) {
-        return ResponseEntity.ok(paymentService.startCardPayment(id));
+        return new ResponseEntity<>(paymentService.startCardPayment(id), HttpStatus.OK);
     }
+
+    @GetMapping("/finalize/{bankPaymentId}")
+    public ResponseEntity<Void> finalizeByBankPaymentId(@PathVariable Long bankPaymentId) {
+        return ResponseEntity.status(302).headers(paymentService.finalize(bankPaymentId)).build();
+    }
+
 }

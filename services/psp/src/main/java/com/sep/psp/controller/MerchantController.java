@@ -33,7 +33,6 @@ public class MerchantController {
         return new ResponseEntity<>(merchantService.getMerchant(merchantKey), HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
     @GetMapping(value = "/{merchantKey}/methods")
     public ResponseEntity<Set<String>> getActiveMethods(@PathVariable String merchantKey) {
         return new ResponseEntity<>(merchantService.getActiveMethods(merchantKey), HttpStatus.OK);

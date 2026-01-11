@@ -32,4 +32,10 @@ export class ReservationsApi {
       `${this.baseUrl}/api/reservations/history`
     );
   }
+
+  getById(id: number): Observable<Reservation> {
+    return this.http.get<Reservation>(
+      `${this.baseUrl}/api/reservations/${id}`
+    )
+  }
 }

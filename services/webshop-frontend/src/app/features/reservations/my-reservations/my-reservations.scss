@@ -110,11 +110,7 @@
   display: grid;
   gap: 8px;
   justify-items: end;
-}
-
-.price {
-  font-weight: 900;
-  font-size: 14px;
+  align-content: start;
 }
 
 .badge {
@@ -126,7 +122,6 @@
   background: #fafafa;
 }
 
-/* STATUS BADGES */
 .badgeCreated {
   background: #f8fafc;
   border-color: #e2e8f0;

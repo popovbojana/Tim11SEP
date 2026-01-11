@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/services/api-gateway/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/services/bank-simulator/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/services/card-payment/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/services/discovery/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/services/psp/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/services/qr-payment/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/services/webshop/src/main/java" charset="UTF-8" />
+  </component>
+</project>

@@ -1,0 +1,40 @@
+<section class="resultPage">
+  <div class="resultCard failed">
+    <div class="topRow">
+      <div>
+        <h1 class="title">Payment failed</h1>
+        <p class="subtitle">
+          The transaction was not completed. You can try again from your reservations.
+        </p>
+      </div>
+      <div class="badgeIcon">✕</div>
+    </div>
+
+    @if (loading()) {
+      <p class="loading">Loading reservation details...</p>
+    } @else if (error()) {
+      <div class="alert">{{ error() }}</div>
+    } @else if (reservation()) {
+      <div class="box">
+        <div class="kv">
+          <div class="k">Reservation</div>
+          <div class="v mono">#{{ reservation()!.id }}</div>
+
+          <div class="k">Offer</div>
+          <div class="v">{{ reservation()!.offerTitle }}</div>
+
+          <div class="k">Total</div>
+          <div class="v">{{ reservation()!.totalPrice }} €</div>
+
+          <div class="k">Status</div>
+          <div class="v">{{ reservation()!.status }}</div>
+        </div>
+      </div>
+    }
+
+    <div class="actions">
+      <a class="btnPrimary" routerLink="/reservations">Go to My reservations</a>
+      <a class="btnSecondary" routerLink="/offers">Back to offers</a>
+    </div>
+  </div>
+</section>
