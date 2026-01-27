@@ -1,21 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-
-type CreateMerchantPayload = {
-  name: string;
-  merchantId: string;
-  merchantPassword: string;
-  successUrl: string;
-  failedUrl: string;
-  errorUrl: string;
-};
+import { MerchantApi } from '../../../../core/services/merchant-api/merchant-api';
+import { MerchantCreateRequest } from '../../../../shared/models/merchant';
 
 @Component({
-  selector: 'app-psp-merchant-create',
+  selector: 'app-merchant-create',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, CommonModule],
   templateUrl: './merchant-create.html',
   styleUrl: './merchant-create.scss',
 })
@@ -25,14 +18,21 @@ export class MerchantCreate {
 
   form;
 
-  constructor(private fb: FormBuilder, private router: Router) {
+  constructor(
+    private fb: FormBuilder,
+    private merchantApi: MerchantApi,
+    private router: Router
+  ) {
     this.form = this.fb.nonNullable.group({
-      name: ['', Validators.required],
-      merchantId: ['', Validators.required],
-      merchantPassword: ['', Validators.required],
-      successUrl: ['', [Validators.required]],
-      failedUrl: ['', [Validators.required]],
-      errorUrl: ['', [Validators.required]],
+      merchantKey: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(3),
+          Validators.maxLength(64),
+          Validators.pattern(/^[A-Za-z0-9._-]+$/),
+        ],
+      ],
     });
   }
 
@@ -46,15 +46,17 @@ export class MerchantCreate {
 
     this.loading = true;
 
-    const payload: CreateMerchantPayload = this.form.getRawValue();
+    const payload: MerchantCreateRequest = this.form.getRawValue();
 
-    // TODO: kasnije zameniti API pozivom (POST /api/merchants)
-    console.log('CREATE MERCHANT PAYLOAD:', payload);
-
-    // simulacija uspeha
-    setTimeout(() => {
-      this.loading = false;
-      this.router.navigate(['/psp/merchants']);
-    }, 400);
+    this.merchantApi.create(payload).subscribe({
+      next: () => {
+        this.loading = false;
+        this.router.navigate(['/merchants']);
+      },
+      error: (err) => {
+        this.loading = false;
+        this.error = err?.error?.message ?? 'Merchant creation failed.';
+      },
+    });
   }
 }

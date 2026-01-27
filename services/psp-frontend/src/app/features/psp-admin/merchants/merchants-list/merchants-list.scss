@@ -1,21 +1,21 @@
 .page {
-  padding: 20px 16px;
+  padding: 24px 16px;
   max-width: 1100px;
   margin: 0 auto;
 }
 
-.pageHeader {
+.header {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 14px;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
 .title {
   margin: 0;
-  font-size: 22px;
-  letter-spacing: -0.3px;
+  font-size: 28px;
+  letter-spacing: -0.4px;
 }
 
 .subtitle {
@@ -28,8 +28,12 @@
   background: #fff;
   border: 1px solid #eaeaea;
   border-radius: 16px;
-  overflow: hidden;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.tableWrap {
+  overflow-x: auto;
 }
 
 .table {
@@ -37,53 +41,66 @@
   border-collapse: collapse;
 }
 
-.table th,
-.table td {
-  padding: 12px 14px;
-  border-bottom: 1px solid #f0f0f0;
+.table thead th {
   text-align: left;
-  font-size: 14px;
-}
-
-.table th {
   font-size: 12px;
-  color: #444;
+  color: #666;
   font-weight: 800;
-  background: #fafafa;
+  padding: 14px 16px;
+  border-bottom: 1px solid #eee;
+  background: #fff;
 }
 
-.actionsCol {
-  width: 130px;
-  text-align: right !important;
+.table tbody td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f1f1;
+  vertical-align: middle;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.cellStrong {
+  font-weight: 800;
+  color: #111;
 }
 
 .mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
   font-size: 13px;
 }
 
-.badges {
+.actionsCol {
+  text-align: right;
+  white-space: nowrap;
+  width: 140px;
+}
+
+.chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 }
 
-.badge {
-  border: 1px solid #e5e5e5;
-  background: #fff;
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 10px;
   border-radius: 999px;
-  padding: 4px 10px;
+  border: 1px solid #e6e6e6;
+  background: #fff;
   font-size: 12px;
   font-weight: 800;
-}
-
-.empty {
-  padding: 18px 14px;
-  color: #666;
-  text-align: center !important;
+  color: #111;
 }
 
 .btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   height: 40px;
   padding: 0 14px;
   border-radius: 12px;
@@ -91,25 +108,70 @@
   background: #2563eb;
   color: #fff;
   font-weight: 800;
-  font-size: 14px;
-  cursor: pointer;
+  font-size: 13px;
   text-decoration: none;
-  display: inline-flex;
-  align-items: center;
+  cursor: pointer;
 }
 
-.btnSecondary {
+.btnPrimary:hover {
+  filter: brightness(0.98);
+}
+
+.btnOutline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   height: 34px;
   padding: 0 12px;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid #e5e5e5;
   background: #fff;
   color: #111;
   font-weight: 800;
   font-size: 13px;
-  cursor: pointer;
   text-decoration: none;
-  display: inline-flex;
+  cursor: pointer;
+}
+
+.btnOutline:hover {
+  border-color: #d8d8d8;
+}
+
+.alert {
+  display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #f3c6c6;
+  background: #fff7f7;
+  color: #7f1d1d;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  margin: 12px 0 16px 0;
+}
+
+.btnGhost {
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid #f0caca;
+  background: transparent;
+  color: #7f1d1d;
+  font-weight: 800;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.state {
+  padding: 14px 2px;
+  color: #666;
+  font-size: 14px;
+}
+
+.emptyCell {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  padding: 18px 16px;
 }

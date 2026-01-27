@@ -1,27 +1,35 @@
-.page {
-  padding: 20px 16px;
-  max-width: 900px;
-  margin: 0 auto;
+.authPage {
+  min-height: calc(100vh - 56px);
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
 }
 
-.pageHeader {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 12px;
+.authCard {
+  width: 100%;
+  max-width: 520px;
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+}
+
+.authHeader {
   margin-bottom: 14px;
 }
 
-.title {
+.authTitle {
   margin: 0;
-  font-size: 22px;
-  letter-spacing: -0.3px;
+  font-size: 24px;
+  letter-spacing: -0.4px;
 }
 
-.subtitle {
-  margin: 6px 0 0 0;
+.authSubtitle {
+  margin: 8px 0 0 0;
   color: #555;
   font-size: 14px;
+  line-height: 1.4;
 }
 
 .alert {
@@ -34,29 +42,9 @@
   margin: 12px 0;
 }
 
-.card {
-  background: #fff;
-  border: 1px solid #eaeaea;
-  border-radius: 16px;
-  padding: 18px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
-}
-
-.form {
+.authForm {
   display: grid;
   gap: 12px;
-}
-
-.grid2 {
-  display: grid;
-  gap: 12px;
-  grid-template-columns: 1fr;
-}
-
-@media (min-width: 800px) {
-  .grid2 {
-    grid-template-columns: 1fr 1fr;
-  }
 }
 
 .field {
@@ -66,7 +54,7 @@
 
 .label {
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   color: #222;
 }
 
@@ -86,9 +74,22 @@
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
 }
 
-.fieldError {
-  color: #7f1d1d;
+.errorText {
+  margin: 2px 0 0 0;
   font-size: 12px;
+  color: #7f1d1d;
+}
+
+.helpText {
+  margin: 4px 0 0 0;
+  font-size: 12px;
+  color: #666;
+  line-height: 1.35;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
   font-weight: 700;
 }
 
@@ -109,17 +110,19 @@
   cursor: not-allowed;
 }
 
-.btnSecondary {
-  height: 40px;
-  padding: 0 14px;
-  border-radius: 12px;
-  border: 1px solid #e5e5e5;
-  background: #fff;
-  color: #111;
-  font-weight: 800;
-  font-size: 14px;
-  cursor: pointer;
+.hint {
+  margin: 4px 0 0 0;
+  text-align: center;
+  color: #555;
+  font-size: 13px;
+}
+
+.link {
+  color: #2563eb;
   text-decoration: none;
-  display: inline-flex;
-  align-items: center;
+  font-weight: 800;
+}
+
+.link:hover {
+  text-decoration: underline;
 }

@@ -1,58 +1,63 @@
 <section class="page">
-  <header class="pageHeader">
+  <div class="header">
     <div>
-      <h2 class="title">Merchants</h2>
+      <h1 class="title">Merchants</h1>
       <p class="subtitle">List of merchants using PSP.</p>
     </div>
 
-    <a class="btnPrimary" routerLink="/psp/merchants/new">+ Add merchant</a>
-  </header>
-
-  <div class="card">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Merchant ID</th>
-          <th>Active methods</th>
-          <th class="actionsCol">Actions</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        @for (m of merchants; track m.merchantKey) {
-          <tr>
-            <!-- Backend nema 'name', pa prikazujemo merchantKey -->
-            <td>{{ m.merchantKey }}</td>
-
-            <!-- Backend nema 'merchantId', identifikator je merchantKey -->
-            <td class="mono">{{ m.merchantKey }}</td>
-
-            <td>
-              <div class="badges">
-                @for (method of m.activeMethods; track method) {
-                  <span class="badge">{{ method }}</span>
-                }
-              </div>
-            </td>
-
-            <td class="actionsCol">
-              <a
-                class="btnSecondary"
-                [routerLink]="['/psp/merchants', m.merchantKey]"
-              >
-                Details
-              </a>
-            </td>
-          </tr>
-        }
-
-        @if (merchants.length === 0) {
-          <tr>
-            <td colspan="4" class="empty">No merchants yet.</td>
-          </tr>
-        }
-      </tbody>
-    </table>
+    <a class="btnPrimary" routerLink="/merchants/new">+ Add merchant</a>
   </div>
+
+  @if (errorMessage()) {
+    <div class="alert">
+      {{ errorMessage() }}
+      <button type="button" class="btnGhost" (click)="load()">Retry</button>
+    </div>
+  }
+
+  @if (merchants() === null) {
+    <div class="state">Loading...</div>
+  } @else {
+    <div class="card">
+      <div class="tableWrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Merchant key</th>
+              <th>Active methods</th>
+              <th class="actionsCol">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @if (merchants()!.length === 0) {
+              <tr>
+                <td colspan="4" class="emptyCell">No merchants yet.</td>
+              </tr>
+            } @else {
+              @for (m of merchants()!; track trackByMerchantKey($index, m)) {
+                <tr>
+                  <td class="mono">{{ m.merchantKey }}</td>
+
+                  <td>
+                    <div class="chips">
+                      @for (method of (m.activeMethods); track method) {
+                        <span class="chip">{{ method }}</span>
+                      }
+                    </div>
+                  </td>
+
+                  <td class="actionsCol">
+                    <a class="btnOutline" [routerLink]="['/merchants', m.merchantKey]">
+                      Edit
+                    </a>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
 </section>
