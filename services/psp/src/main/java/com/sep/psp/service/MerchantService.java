@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -72,6 +73,12 @@ public class MerchantService {
     @Transactional(readOnly = true)
     public MerchantResponse getMerchant(String merchantKey) {
         return toResponse(getByMerchantKey(merchantKey));
+    }
+
+    public Set<MerchantResponse> getAll() {
+        return merchantRepository.findAll().stream()
+                .map(this::toResponse)
+                .collect(Collectors.toSet());
     }
 
     private MerchantResponse toResponse(Merchant merchant) {

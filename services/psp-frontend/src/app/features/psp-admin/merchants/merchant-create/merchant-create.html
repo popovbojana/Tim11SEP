@@ -1,76 +1,58 @@
-<section class="page">
-  <header class="pageHeader">
-    <div>
-      <h2 class="title">Create merchant</h2>
-      <p class="subtitle">Add a new merchant to PSP.</p>
-    </div>
+<section class="authPage">
+  <div class="authCard">
+    <header class="authHeader">
+      <h4 class="authTitle">Create merchant</h4>
+      <p class="authSubtitle">
+        Add a new merchant to the PSP system. Merchant key must be unique.
+      </p>
+    </header>
 
-    <a class="btnSecondary" routerLink="/psp/merchants">Back</a>
-  </header>
-
-  @if (error) {
-    <div class="alert">
-      {{ error }}
-    </div>
-  }
-
-  <div class="card">
-    <form [formGroup]="form" (ngSubmit)="submit()" class="form">
-      <div class="grid2">
-        <div class="field">
-          <label class="label" for="name">Name</label>
-          <input id="name" class="input" type="text" formControlName="name" />
-          @if (form.controls.name.touched && form.controls.name.invalid) {
-            <div class="fieldError">Name is required.</div>
-          }
-        </div>
-
-        <div class="field">
-          <label class="label" for="merchantId">Merchant ID</label>
-          <input id="merchantId" class="input" type="text" formControlName="merchantId" />
-          @if (form.controls.merchantId.touched && form.controls.merchantId.invalid) {
-            <div class="fieldError">Merchant ID is required.</div>
-          }
-        </div>
+    @if (error) {
+      <div class="alert">
+        {{ error }}
       </div>
+    }
 
+    <form [formGroup]="form" (ngSubmit)="submit()" class="authForm">
       <div class="field">
-        <label class="label" for="merchantPassword">Merchant password (API key)</label>
-        <input id="merchantPassword" class="input" type="text" formControlName="merchantPassword" />
-        @if (form.controls.merchantPassword.touched && form.controls.merchantPassword.invalid) {
-          <div class="fieldError">Merchant password is required.</div>
+        <label class="label" for="merchantKey">Merchant key</label>
+        <input
+          id="merchantKey"
+          class="input"
+          type="text"
+          formControlName="merchantKey"
+          placeholder="e.g. acme_store_01"
+          autocomplete="off"
+        />
+
+        @if (form.controls.merchantKey.touched && form.controls.merchantKey.invalid) {
+          <p class="errorText">
+            @if (form.controls.merchantKey.errors?.['required']) {
+              Merchant key is required.
+            } @else if (form.controls.merchantKey.errors?.['minlength']) {
+              Minimum is 3 characters.
+            } @else if (form.controls.merchantKey.errors?.['maxlength']) {
+              Maximum is 64 characters.
+            } @else if (form.controls.merchantKey.errors?.['pattern']) {
+              Allowed: letters, numbers, dot (.), underscore (_) and dash (-).
+            } @else {
+              Invalid merchant key.
+            }
+          </p>
         }
-      </div>
 
-      <div class="grid2">
-        <div class="field">
-          <label class="label" for="successUrl">Success URL</label>
-          <input id="successUrl" class="input" type="text" formControlName="successUrl" placeholder="https://..." />
-          @if (form.controls.successUrl.touched && form.controls.successUrl.invalid) {
-            <div class="fieldError">Success URL is required.</div>
-          }
-        </div>
-
-        <div class="field">
-          <label class="label" for="failedUrl">Failed URL</label>
-          <input id="failedUrl" class="input" type="text" formControlName="failedUrl" placeholder="https://..." />
-          @if (form.controls.failedUrl.touched && form.controls.failedUrl.invalid) {
-            <div class="fieldError">Failed URL is required.</div>
-          }
-        </div>
-      </div>
-
-      <div class="field">
-        <label class="label" for="errorUrl">Error URL</label>
-        <input id="errorUrl" class="input" type="text" formControlName="errorUrl" placeholder="https://..." />
-        @if (form.controls.errorUrl.touched && form.controls.errorUrl.invalid) {
-          <div class="fieldError">Error URL is required.</div>
-        }
+        <p class="helpText">
+          Tip: use a stable identifier (no spaces). Example: <span class="mono">merchant_123</span>
+        </p>
       </div>
 
       <button class="btnPrimary" type="submit" [disabled]="loading">
         {{ loading ? 'Creating...' : 'Create merchant' }}
       </button>
+
+      <p class="hint">
+        <a class="link" routerLink="/merchants">Back to merchants</a>
+      </p>
     </form>
   </div>
 </section>

@@ -5,13 +5,12 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthApiService, LoginRequest } from '../../../core/services/auth-api/auth-api';
 import { TokenService } from '../../../core/services/token/token';
 
-
 @Component({
   selector: 'app-psp-login',
   standalone: true,
   imports: [ReactiveFormsModule, CommonModule],
   templateUrl: './psp-login.html',
-  styleUrl: './psp-login.scss'
+  styleUrl: './psp-login.scss',
 })
 export class PspLogin {
   error: string | null = null;
@@ -32,10 +31,6 @@ export class PspLogin {
   }
 
   submit(): void {
-    console.log('SUBMIT OKINUO');
-    console.log('FORM VALID?', this.form.valid);
-    console.log('PAYLOAD', this.form.getRawValue());
-
     this.error = null;
 
     if (this.form.invalid) {
@@ -51,13 +46,13 @@ export class PspLogin {
       next: (res) => {
         this.loading = false;
         this.tokenService.setToken(res.token);
-        this.router.navigate(['/psp/merchants']); // PSP admin landing page
+        this.router.navigate(['/merchants']);
       },
       error: (err) => {
-  console.log('LOGIN ERROR FULL >>>', err);
-  this.loading = false;
-  this.error = JSON.stringify(err);
-},
+        console.log('LOGIN ERROR FULL >>>', err);
+        this.loading = false;
+        this.error = JSON.stringify(err);
+      },
     });
   }
 }

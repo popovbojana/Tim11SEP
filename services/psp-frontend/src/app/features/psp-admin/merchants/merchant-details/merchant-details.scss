@@ -1,21 +1,21 @@
 .page {
-  padding: 20px 16px;
-  max-width: 900px;
+  padding: 24px 16px;
+  max-width: 980px;
   margin: 0 auto;
 }
 
-.pageHeader {
+.header {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 14px;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
 .title {
   margin: 0;
-  font-size: 22px;
-  letter-spacing: -0.3px;
+  font-size: 28px;
+  letter-spacing: -0.4px;
 }
 
 .subtitle {
@@ -28,25 +28,14 @@
   background: #fff;
   border: 1px solid #eaeaea;
   border-radius: 16px;
-  padding: 18px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
-}
-
-.muted {
-  margin: 0;
-  color: #666;
+  padding: 16px;
 }
 
 .infoGrid {
   display: grid;
-  gap: 12px;
-  grid-template-columns: 1fr;
-}
-
-@media (min-width: 800px) {
-  .infoGrid {
-    grid-template-columns: 1fr 1fr;
-  }
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
 }
 
 .infoBlock {
@@ -54,26 +43,27 @@
   gap: 6px;
 }
 
-.labelSmall {
+.infoLabel {
   font-size: 12px;
+  color: #666;
   font-weight: 800;
-  color: #444;
 }
 
-.value {
+.infoValue {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 800;
   color: #111;
 }
 
 .mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
   font-size: 13px;
 }
 
 .divider {
   height: 1px;
-  background: #f0f0f0;
+  background: #eee;
   margin: 14px 0;
 }
 
@@ -81,63 +71,53 @@
   margin: 0;
   font-size: 16px;
   font-weight: 900;
+  letter-spacing: -0.2px;
 }
 
 .sectionHint {
   margin: 6px 0 12px 0;
-  color: #555;
+  color: #666;
   font-size: 13px;
 }
 
 .methodsGrid {
   display: grid;
-  gap: 10px;
-  grid-template-columns: 1fr;
-  margin-bottom: 14px;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 10px;
 }
 
-@media (min-width: 800px) {
-  .methodsGrid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.methodItem {
+.methodCard {
   display: flex;
   align-items: center;
   gap: 10px;
-  border: 1px solid #e5e5e5;
+  height: 44px;
   border-radius: 12px;
-  padding: 10px 12px;
+  border: 1px solid #e5e5e5;
   background: #fff;
+  padding: 0 12px;
   cursor: pointer;
-  user-select: none;
+  text-align: left;
+}
+
+.methodCard:hover {
+  border-color: #d8d8d8;
+}
+
+.methodCard.selected {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
 }
 
 .methodText {
-  font-size: 13px;
   font-weight: 900;
+  font-size: 13px;
   color: #111;
-}
-
-.alert {
-  border: 1px solid #f3c6c6;
-  background: #fff7f7;
-  color: #7f1d1d;
-  border-radius: 12px;
-  padding: 10px 12px;
-  font-size: 13px;
-  margin: 12px 0;
-}
-
-.success {
-  border: 1px solid #c7f0d1;
-  background: #f2fff5;
-  color: #14532d;
-  border-radius: 12px;
-  padding: 10px 12px;
-  font-size: 13px;
-  margin: 12px 0;
 }
 
 .btnPrimary {
@@ -147,9 +127,10 @@
   border: 1px solid #2563eb;
   background: #2563eb;
   color: #fff;
-  font-weight: 800;
+  font-weight: 900;
   font-size: 14px;
   cursor: pointer;
+  margin-top: 10px;
 }
 
 .btnPrimary:disabled {
@@ -157,7 +138,10 @@
   cursor: not-allowed;
 }
 
-.btnSecondary {
+.btnOutline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   height: 40px;
   padding: 0 14px;
   border-radius: 12px;
@@ -165,9 +149,64 @@
   background: #fff;
   color: #111;
   font-weight: 800;
-  font-size: 14px;
-  cursor: pointer;
+  font-size: 13px;
   text-decoration: none;
-  display: inline-flex;
+}
+
+.alert {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #f3c6c6;
+  background: #fff7f7;
+  color: #7f1d1d;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  margin: 12px 0 16px 0;
+}
+
+.success {
+  border: 1px solid #c7ecd3;
+  background: #f3fff6;
+  color: #14532d;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  margin: 12px 0 16px 0;
+}
+
+.btnGhost {
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid #f0caca;
+  background: transparent;
+  color: #7f1d1d;
+  font-weight: 800;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.state {
+  padding: 14px 2px;
+  color: #666;
+  font-size: 14px;
+}
+
+.errorText {
+  margin: 2px 0 0 0;
+  font-size: 12px;
+  color: #7f1d1d;
+}
+
+@media (max-width: 720px) {
+  .infoGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .methodsGrid {
+    grid-template-columns: 1fr;
+  }
 }
