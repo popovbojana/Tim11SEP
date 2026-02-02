@@ -1,18 +1,15 @@
 package com.sep.psp.client;
 
+import com.sep.psp.config.FeignHttpsConfig;
 import com.sep.psp.dto.payment.WebshopPaymentCallbackRequest;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
-@Component
-@RequiredArgsConstructor
-public class WebshopClient {
+@FeignClient(name = "webshop", url = "https://localhost:8085", configuration = FeignHttpsConfig.class)
+public interface WebshopClient {
 
-    private final RestTemplate restTemplate;
-
-    public void sendPaymentCallback(WebshopPaymentCallbackRequest request) {
-        restTemplate.postForObject("http://localhost:8080/webshop/api/payments/callback", request, Void.class);
-    }
+    @PostMapping("/api/payments/callback")
+    void sendPaymentCallback(@RequestBody WebshopPaymentCallbackRequest request);
 
 }

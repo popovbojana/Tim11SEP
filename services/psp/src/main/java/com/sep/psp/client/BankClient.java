@@ -1,27 +1,18 @@
 package com.sep.psp.client;
 
-import com.sep.psp.config.BankConfig;
+import com.sep.psp.config.FeignHttpsConfig;
 import com.sep.psp.dto.payment.InitBankPaymentRequest;
 import com.sep.psp.dto.payment.InitBankPaymentResponse;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
-@Component
-@RequiredArgsConstructor
-public class BankClient {
+@FeignClient(name = "bank-simulator", url = "https://localhost:8084", configuration = FeignHttpsConfig.class)
+public interface BankClient {
 
-    private final RestTemplate restTemplate;
-    private final BankConfig bankConfig;
+    @PostMapping("/api/payments/init")
+    InitBankPaymentResponse initBankPayment(@RequestBody InitBankPaymentRequest request);
 
-    public InitBankPaymentResponse initBankPayment(InitBankPaymentRequest request) {
-        String url = bankConfig.getBaseUrl() + "/api/payments/init";
-        return restTemplate.postForObject(url, request, InitBankPaymentResponse.class);
-    }
-
-    public InitBankPaymentResponse initBankQrPayment(InitBankPaymentRequest request) {
-        String url = bankConfig.getBaseUrl() + "/api/payments/init/qr";
-        return restTemplate.postForObject(url, request, InitBankPaymentResponse.class);
-    }
-
+    @PostMapping("/api/payments/init/qr")
+    InitBankPaymentResponse initBankQrPayment(@RequestBody InitBankPaymentRequest request);
 }

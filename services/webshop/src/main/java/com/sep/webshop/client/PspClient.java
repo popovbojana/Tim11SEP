@@ -1,28 +1,16 @@
 package com.sep.webshop.client;
 
-import com.sep.webshop.config.PspConfig;
+import com.sep.webshop.config.FeignHttpsConfig;
 import com.sep.webshop.dto.payment.InitPaymentRequest;
 import com.sep.webshop.dto.payment.InitPaymentResponse;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
-@Component
-@RequiredArgsConstructor
-public class PspClient {
+@FeignClient(name = "psp-client", url = "https://localhost:8080/psp", configuration = FeignHttpsConfig.class)
+public interface PspClient {
 
-    private final RestTemplate restTemplate;
-
-    private final PspConfig pspConfig;
-
-    public InitPaymentResponse initPayment(InitPaymentRequest request) {
-        String url = pspConfig.getBaseUrl() + "/api/payments/init";
-
-        return restTemplate.postForObject(
-                url,
-                request,
-                InitPaymentResponse.class
-        );
-    }
+    @PostMapping("/api/payments/init")
+    InitPaymentResponse initPayment(@RequestBody InitPaymentRequest request);
 
 }

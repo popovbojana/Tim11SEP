@@ -1,27 +1,21 @@
 package com.sep.banksimulator.client;
 
+import com.sep.banksimulator.config.FeignHttpsConfig;
 import com.sep.banksimulator.dto.qr.GenerateQrRequest;
 import com.sep.banksimulator.dto.qr.GenerateQrResponse;
 import com.sep.banksimulator.dto.qr.ValidateQrRequest;
 import com.sep.banksimulator.dto.qr.ValidateQrResponse;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
-@Component
-@RequiredArgsConstructor
-public class QrPaymentClient {
+@FeignClient(name = "qr-payment", url = "https://localhost:8083", configuration = FeignHttpsConfig.class)
+public interface QrPaymentClient {
 
-    private final RestTemplate restTemplate;
+    @PostMapping("/api/qr/generate")
+    GenerateQrResponse generate(@RequestBody GenerateQrRequest request);
 
-    private static final String QR_SERVICE_BASE = "http://localhost:8080/qr-payment";
-
-    public GenerateQrResponse generate(GenerateQrRequest request) {
-        return restTemplate.postForObject(QR_SERVICE_BASE + "/api/qr/generate", request, GenerateQrResponse.class);
-    }
-
-    public ValidateQrResponse validate(ValidateQrRequest request) {
-        return restTemplate.postForObject(QR_SERVICE_BASE + "/api/qr/validate", request, ValidateQrResponse.class);
-    }
+    @PostMapping("/api/qr/validate")
+    ValidateQrResponse validate(@RequestBody ValidateQrRequest request);
 
 }

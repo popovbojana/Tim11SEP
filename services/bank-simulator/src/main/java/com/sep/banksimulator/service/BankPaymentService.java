@@ -1,6 +1,7 @@
 package com.sep.banksimulator.service;
 
 import com.sep.banksimulator.client.CardPaymentClient;
+import com.sep.banksimulator.client.PspClient;
 import com.sep.banksimulator.client.QrPaymentClient;
 import com.sep.banksimulator.dto.*;
 import com.sep.banksimulator.dto.card.AuthorizeCardPaymentRequest;
@@ -13,8 +14,6 @@ import com.sep.banksimulator.repository.BankPaymentRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -24,8 +23,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class BankPaymentService {
 
-    private static final String PSP_CALLBACK_URL = "http://localhost:8080/psp/api/bank/callback";
-    private static final String PSP_FINALIZE_URL = "http://localhost:8080/psp/api/payments/finalize/";
+    private static final String PSP_FINALIZE_URL = "https://localhost:8080/psp/api/payments/finalize/";
 
     private static final Duration CARD_PAYMENT_TIMEOUT = Duration.ofMinutes(1);
 
@@ -37,9 +35,9 @@ public class BankPaymentService {
     private static final String REFERENCE_NUMBER = null;
 
     private final BankPaymentRepository bankPaymentRepository;
-    private final RestTemplate restTemplate;
     private final CardPaymentClient cardPaymentClient;
     private final QrPaymentClient qrServiceClient;
+    private final PspClient pspClient;
 
     @Transactional
     public InitBankPaymentResponse init(InitBankPaymentRequest request) {
@@ -57,7 +55,7 @@ public class BankPaymentService {
 
         return InitBankPaymentResponse.builder()
                 .bankPaymentId(saved.getId())
-                .redirectUrl("http://localhost:4400/checkout/" + saved.getId())
+                .redirectUrl("https://localhost:4400/checkout/" + saved.getId())
                 .build();
     }
 
@@ -77,7 +75,7 @@ public class BankPaymentService {
 
         return InitBankPaymentResponse.builder()
                 .bankPaymentId(saved.getId())
-                .redirectUrl("http://localhost:4400/qr-checkout/" + saved.getId())
+                .redirectUrl("https://localhost:4400/qr-checkout/" + saved.getId())
                 .build();
     }
 
@@ -244,8 +242,9 @@ public class BankPaymentService {
                 .build();
 
         try {
-            restTemplate.postForObject(PSP_CALLBACK_URL, callback, Void.class);
-        } catch (RestClientException ignored) {
+            pspClient.sendBankCallback(callback);
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 

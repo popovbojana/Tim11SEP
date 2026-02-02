@@ -29,11 +29,11 @@ public class PaymentService {
                 reservationService.create(reservationRequest, customerEmail, merchantOrderId);
 
         String successUrl =
-                "http://localhost:4200/payment/success?reservationId=" + pendingReservation.getId();
+                "https://localhost:4200/payment/success/" + pendingReservation.getId();
         String failedUrl =
-                "http://localhost:4200/payment/failed?reservationId=" + pendingReservation.getId();
+                "https://localhost:4200/payment/failed/" + pendingReservation.getId();
         String errorUrl =
-                "http://localhost:4200/payment/error?reservationId=" + pendingReservation.getId();
+                "https://localhost:4200/payment/error/" + pendingReservation.getId();
 
         InitPaymentRequest request = InitPaymentRequest.builder()
                 .merchantKey(pspConfig.getMerchantKey())

@@ -12,9 +12,9 @@ import { Error } from './features/payments/error/error';
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'offers' },
 
-  { path: 'payment/success', component: Success },
-  { path: 'payment/failed', component: Failed },
-  { path: 'payment/error', component: Error },
+  { path: 'payment/success/:reservationId', component: Success },
+  { path: 'payment/failed/:reservationId', component: Failed },
+  { path: 'payment/error/:reservationId', component: Error },
 
   { path: 'offers', component: OffersList },
   { path: 'offers/:id/reserve', component: CreateReservation },

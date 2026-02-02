@@ -1,18 +1,16 @@
 package com.sep.banksimulator.client;
 
+import com.sep.banksimulator.config.FeignHttpsConfig;
 import com.sep.banksimulator.dto.card.AuthorizeCardPaymentRequest;
 import com.sep.banksimulator.dto.card.AuthorizeCardPaymentResponse;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
-@Component
-@RequiredArgsConstructor
-public class CardPaymentClient {
+@FeignClient(name = "card-payment", url = "https://localhost:8082", configuration = FeignHttpsConfig.class)
+public interface CardPaymentClient {
 
-    private final RestTemplate restTemplate;
+    @PostMapping("/api/cards/authorize")
+    AuthorizeCardPaymentResponse authorize(@RequestBody AuthorizeCardPaymentRequest request);
 
-    public AuthorizeCardPaymentResponse authorize(AuthorizeCardPaymentRequest request) {
-        return restTemplate.postForObject("http://localhost:8080/card-payment/api/cards/authorize", request, AuthorizeCardPaymentResponse.class);
-    }
 }

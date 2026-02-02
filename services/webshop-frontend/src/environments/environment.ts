@@ -1,4 +1,4 @@
 export const environment = {
-  apiBaseUrl: 'http://localhost:8080/webshop',
-  pspBaseUrl: 'http://localhost:4300/'
+  apiBaseUrl: 'https://localhost:8080/webshop',
+  pspBaseUrl: 'https://localhost:4300/'
 };
