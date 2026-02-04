@@ -7,9 +7,9 @@
       </p>
     </header>
 
-    @if (error) {
+    @if (errorMessage()) {
       <div class="alert">
-        {{ error }}
+        {{ errorMessage() }}
       </div>
     }
 
@@ -25,7 +25,7 @@
           [class.inputError]="form.controls.name.touched && form.controls.name.invalid"
         />
         @if (form.controls.name.touched && form.controls.name.invalid) {
-          <p class="errorText">Name is required (uppercase letters, numbers, _ or -).</p>
+          <p class="errorText">Name is required (letters, numbers, _ or -).</p>
         }
       </div>
 
@@ -44,8 +44,8 @@
         }
       </div>
 
-      <button class="btnPrimary" type="submit" [disabled]="loading">
-        {{ loading ? 'Registering...' : 'Register Method' }}
+      <button class="btnPrimary" type="submit" [disabled]="loading()">
+        {{ loading() ? 'Registering...' : 'Register Method' }}
       </button>
 
       <p class="hint">

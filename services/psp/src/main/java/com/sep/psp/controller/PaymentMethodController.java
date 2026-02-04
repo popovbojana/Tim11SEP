@@ -1,7 +1,7 @@
 package com.sep.psp.controller;
 
-import com.sep.psp.dto.PaymentMethodRequest;
-import com.sep.psp.dto.PaymentMethodResponse;
+import com.sep.psp.dto.paymentMethod.PaymentMethodRequest;
+import com.sep.psp.dto.paymentMethod.PaymentMethodResponse;
 import com.sep.psp.service.PaymentMethodService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

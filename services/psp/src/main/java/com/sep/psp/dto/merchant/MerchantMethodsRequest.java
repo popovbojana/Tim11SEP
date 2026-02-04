@@ -1,4 +1,4 @@
-package com.sep.psp.dto;
+package com.sep.psp.dto.merchant;
 
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;

@@ -2,7 +2,7 @@
   <div class="header">
     <div>
       <h1 class="title">Merchant details</h1>
-      <p class="subtitle">View merchant info and edit payment methods.</p>
+      <p class="subtitle">View and update merchant configuration.</p>
     </div>
     <a class="btnOutline" routerLink="/merchants">Back</a>
   </div>
@@ -10,7 +10,7 @@
   @if (errorMessage()) {
     <div class="alert">
       {{ errorMessage() }}
-      <button type="button" class="btnGhost" (click)="load()" [disabled]="saving">Retry</button>
+      <button type="button" class="btnGhost" (click)="load()" [disabled]="saving()">Retry</button>
     </div>
   }
 
@@ -18,58 +18,71 @@
     <div class="success">{{ successMessage() }}</div>
   }
 
-  @if (merchant() === null) {
-    <div class="state">Loading...</div>
-  } @else {
+  @if (merchant() === null && !errorMessage()) {
+    <div class="state">Loading merchant details...</div>
+  } @else if (merchant()) {
     <div class="card">
-      <div class="infoGrid">
-        <div class="infoBlock">
-          <div class="infoLabel">Merchant key</div>
-          <div class="infoValue mono">{{ merchant()?.merchantKey }}</div>
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="section">
-        <h2 class="sectionTitle">Payment methods</h2>
-        <p class="sectionHint">Assign available methods to this merchant.</p>
-
-        <div class="methodsGrid">
-          @for (m of allMethods(); track m) {
-            <button
-              type="button"
-              class="methodCard"
-              [class.selected]="isSelected(m)"
-              (click)="toggleMethod(m)"
-            >
-              <input
-                class="checkbox"
-                type="checkbox"
-                [checked]="isSelected(m)"
-                (click)="$event.stopPropagation()"
-                (change)="toggleMethod(m)"
-              />
-              <span class="methodText">{{ m }}</span>
-            </button>
-          } @empty {
-            <p class="state">No payment methods defined in system.</p>
-          }
+      <form [formGroup]="form" (ngSubmit)="save()" class="detailForm">
+        <div class="infoGrid">
+          <div class="infoBlock">
+            <div class="infoLabel">Merchant Key</div>
+            <div class="infoValue mono">{{ merchant()?.merchantKey }}</div>
+            <p class="helpText">Key is unique and cannot be changed.</p>
+          </div>
         </div>
 
-        @if (form.controls.methods.touched && form.controls.methods.value.length === 0) {
-          <p class="errorText">Pick at least one payment method.</p>
-        }
+        <div class="divider"></div>
 
-        <button
-          class="btnPrimary"
-          type="button"
-          (click)="save()"
-          [disabled]="saving || form.controls.methods.value.length === 0 || isSameAsInitial()"
-        >
-          {{ saving ? 'Saving...' : 'Save methods' }}
-        </button>
-      </div>
+        <div class="formGrid">
+          <div class="field">
+            <label class="label">Full Name</label>
+            <input class="input" formControlName="fullName" [class.inputError]="form.controls.fullName.touched && form.controls.fullName.invalid" />
+          </div>
+          <div class="field">
+            <label class="label">Email Address</label>
+            <input class="input" type="email" formControlName="email" [class.inputError]="form.controls.email.touched && form.controls.email.invalid" />
+          </div>
+        </div>
+
+        <div class="formGrid mt-20">
+          <div class="field">
+            <label class="label">Success URL</label>
+            <input class="input" formControlName="successUrl" placeholder="https://..." />
+          </div>
+          <div class="field">
+            <label class="label">Failed URL</label>
+            <input class="input" formControlName="failedUrl" placeholder="https://..." />
+          </div>
+          <div class="field">
+            <label class="label">Error URL</label>
+            <input class="input" formControlName="errorUrl" placeholder="https://..." />
+          </div>
+          <div class="field">
+            <label class="label">Webhook URL</label>
+            <input class="input" formControlName="webhookUrl" placeholder="https://..." />
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="section">
+          <h2 class="sectionTitle">Payment Methods</h2>
+          <p class="sectionHint">Toggle methods available for this merchant.</p>
+
+          <div class="methodsGrid">
+            @for (m of allMethods(); track m) {
+              <button type="button" class="methodCard" [class.selected]="form.controls.methods.value.includes(m)" (click)="toggleMethod(m)">
+                <input class="checkbox" type="checkbox" [checked]="form.controls.methods.value.includes(m)" (click)="$event.stopPropagation()" (change)="toggleMethod(m)" />
+                <span class="methodText">{{ m }}</span>
+              </button>
+            }
+          </div>
+
+          <button class="btnPrimary" type="submit" [disabled]="saving() || form.invalid || isUnchanged()">
+            {{ saving() ? 'Saving Changes...' : 'Save Configuration' }}
+          </button>
+        </div>
+      </form>
     </div>
   }
 </section>

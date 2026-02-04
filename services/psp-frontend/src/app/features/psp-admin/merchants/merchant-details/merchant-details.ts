@@ -1,13 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { startWith } from 'rxjs';
 import { MerchantApi } from '../../../../core/services/merchant-api/merchant-api';
 import { PaymentMethodApi } from '../../../../core/services/payment-method-api/payment-method-api';
-import {
-  MerchantResponse,
-  UpdateMethodsPayload
-} from '../../../../shared/models/merchant';
+import { MerchantResponse, MerchantUpdateRequest } from '../../../../shared/models/merchant';
 
 @Component({
   selector: 'app-merchant-details',
@@ -27,12 +26,41 @@ export class MerchantDetails implements OnInit {
   allMethods = signal<string[]>([]);
   errorMessage = signal<string | null>(null);
   successMessage = signal<string | null>(null);
-  saving = false;
+  saving = signal(false);
+
+  private httpsPattern = /^https:\/\/.+/;
 
   form = this.fb.nonNullable.group({
-    methods: this.fb.nonNullable.control<string[]>([], {
-      validators: [Validators.required],
-    }),
+    fullName: ['', [Validators.required]],
+    email: ['', [Validators.required, Validators.email]],
+    successUrl: ['', [Validators.required, Validators.pattern(this.httpsPattern)]],
+    failedUrl: ['', [Validators.required, Validators.pattern(this.httpsPattern)]],
+    errorUrl: ['', [Validators.required, Validators.pattern(this.httpsPattern)]],
+    webhookUrl: ['', [Validators.pattern(this.httpsPattern)]],
+    methods: [[] as string[], [Validators.required, Validators.minLength(1)]],
+  });
+
+  formValue = toSignal(this.form.valueChanges.pipe(startWith(this.form.getRawValue())));
+
+  isUnchanged = computed(() => {
+    const initial = this.merchant();
+    const current = this.formValue();
+    
+    if (!initial || !current || !current.methods) return true;
+
+    const currentMethods = current.methods;
+    const initialMethods = initial.activeMethods;
+
+    const methodsMatch = initialMethods.length === currentMethods.length &&
+      [...initialMethods].sort().every((v, i) => v === [...currentMethods].sort()[i]);
+
+    return current.fullName === initial.fullName &&
+           current.email === initial.email &&
+           current.successUrl === initial.successUrl &&
+           current.failedUrl === initial.failedUrl &&
+           current.errorUrl === initial.errorUrl &&
+           (current.webhookUrl || '') === (initial.webhookUrl || '') &&
+           methodsMatch;
   });
 
   ngOnInit(): void {
@@ -63,8 +91,15 @@ export class MerchantDetails implements OnInit {
     this.merchantApi.get(this.merchantKey).subscribe({
       next: (res) => {
         this.merchant.set(res);
-        const current = res.activeMethods ?? [];
-        this.form.controls.methods.setValue([...current]);
+        this.form.patchValue({
+          fullName: res.fullName,
+          email: res.email,
+          successUrl: res.successUrl,
+          failedUrl: res.failedUrl,
+          errorUrl: res.errorUrl,
+          webhookUrl: res.webhookUrl ?? '',
+          methods: [...res.activeMethods]
+        });
         this.form.markAsPristine();
       },
       error: (err) => {
@@ -73,61 +108,37 @@ export class MerchantDetails implements OnInit {
     });
   }
 
-  isSameAsInitial(): boolean {
-    const initial = this.merchant()?.activeMethods ?? [];
-    const current = this.form.controls.methods.value;
-    
-    if (initial.length !== current.length) return false;
-    
-    const sortedInitial = [...initial].sort();
-    const sortedCurrent = [...current].sort();
-    
-    return sortedInitial.every((val, index) => val === sortedCurrent[index]);
-  }
-
-  isSelected(method: string): boolean {
-    return this.form.controls.methods.value.includes(method);
-  }
-
   toggleMethod(method: string): void {
     this.successMessage.set(null);
     const current = this.form.controls.methods.value;
+    const next = current.includes(method) 
+      ? current.filter(m => m !== method) 
+      : [...current, method];
 
-    if (current.includes(method)) {
-      this.form.controls.methods.setValue(current.filter((m) => m !== method));
-    } else {
-      this.form.controls.methods.setValue([...current, method]);
-    }
-
+    this.form.controls.methods.setValue(next);
     this.form.controls.methods.markAsTouched();
     this.form.markAsDirty();
   }
 
   save(): void {
+    if (this.form.invalid || this.isUnchanged()) return;
+
     this.errorMessage.set(null);
     this.successMessage.set(null);
+    this.saving.set(true);
 
-    const selected = this.form.controls.methods.value;
-    if (!selected || selected.length === 0) return;
+    const payload: MerchantUpdateRequest = this.form.getRawValue();
 
-    this.saving = true;
-    const payload: UpdateMethodsPayload = { methods: selected };
-
-    this.merchantApi.updateMethods(this.merchantKey, payload).subscribe({
-      next: (updatedNames) => {
-        this.saving = false;
-        this.successMessage.set('Payment methods updated successfully.');
-        this.form.controls.methods.setValue([...updatedNames]);
+    this.merchantApi.update(this.merchantKey, payload).subscribe({
+      next: (updated) => {
+        this.saving.set(false);
+        this.successMessage.set('Merchant updated successfully.');
+        this.merchant.set(updated);
         this.form.markAsPristine();
-
-        const currentMerchant = this.merchant();
-        if (currentMerchant) {
-          this.merchant.set({ ...currentMerchant, activeMethods: updatedNames });
-        }
       },
       error: (err) => {
-        this.saving = false;
-        this.errorMessage.set(err?.error?.message ?? 'Failed to save payment methods.');
+        this.saving.set(false);
+        this.errorMessage.set(err?.error?.message ?? 'Failed to update merchant.');
       },
     });
   }

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { PaymentMethodApi } from '../../../../core/services/payment-method-api/payment-method-api';
@@ -17,8 +17,8 @@ export class PaymentMethodNew {
   private paymentMethodApi = inject(PaymentMethodApi);
   private router = inject(Router);
 
-  error = '';
-  loading = false;
+  errorMessage = signal<string | null>(null);
+  loading = signal(false);
 
   form = this.fb.nonNullable.group({
     name: ['', [
@@ -38,8 +38,8 @@ export class PaymentMethodNew {
       return;
     }
 
-    this.error = '';
-    this.loading = true;
+    this.errorMessage.set(null);
+    this.loading.set(true);
 
     const payload: PaymentMethodRequest = this.form.getRawValue();
     payload.name = payload.name.toUpperCase().trim();
@@ -47,12 +47,12 @@ export class PaymentMethodNew {
 
     this.paymentMethodApi.add(payload).subscribe({
       next: () => {
-        this.loading = false;
+        this.loading.set(false);
         this.router.navigate(['/payment-methods']);
       },
       error: (err) => {
-        this.loading = false;
-        this.error = err?.error?.message ?? 'Failed to register payment method.';
+        this.loading.set(false);
+        this.errorMessage.set(err?.error?.message ?? 'Failed to register payment method.');
       },
     });
   }

@@ -7,16 +7,36 @@ export interface PaymentMethodResponse {
 export interface MerchantResponse {
   id: number;
   merchantKey: string;
+  fullName: string;
+  email: string;
+  successUrl: string;
+  failedUrl: string;
+  errorUrl: string;
+  webhookUrl?: string;
   activeMethods: string[];
 }
 
-export type MerchantCreateRequest = {
+export interface MerchantCreateRequest {
   merchantKey: string;
-};
-
-export type UpdateMethodsPayload = {
+  merchantPassword: string;
+  fullName: string;
+  email: string;
+  successUrl: string;
+  failedUrl: string;
+  errorUrl: string;
+  webhookUrl?: string;
   methods: string[];
-};
+}
+
+export interface MerchantUpdateRequest {
+  fullName: string;
+  email: string;
+  successUrl: string;
+  failedUrl: string;
+  errorUrl: string;
+  webhookUrl?: string;
+  methods: string[];
+}
 
 export interface PaymentMethodRequest {
   name: string;
