@@ -1,0 +1,59 @@
+<section class="page">
+  <div class="header">
+    <div>
+      <h1 class="title">Payment Methods</h1>
+      <p class="subtitle">Manage available payment plugins in the system.</p>
+    </div>
+
+    <a class="btnPrimary" routerLink="/payment-methods/new">+ Add method</a>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="alert">
+      {{ errorMessage() }}
+      <button type="button" class="btnGhost" (click)="load()">Retry</button>
+    </div>
+  }
+
+  @if (methods() === null) {
+    <div class="state">Loading methods...</div>
+  } @else {
+    <div class="card">
+      <div class="tableWrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Service Name</th>
+              <th class="actionsCol">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (methods()!.length === 0) {
+              <tr>
+                <td colspan="3" class="emptyCell">No methods registered.</td>
+              </tr>
+            } @else {
+              @for (m of methods()!; track trackById($index, m)) {
+                <tr>
+                  <td><span class="chip">{{ m.name }}</span></td>
+                  <td class="mono">{{ m.serviceName }}</td>
+                  <td class="actionsCol">
+                    <div class="actionGroup">
+                      <a class="btnIcon" [routerLink]="['/payment-methods', 'edit', m.id]" title="Edit">
+                        <p class="edit-icon">✎</p>
+                      </a>
+                      <button class="btnIcon delete" (click)="deleteMethod(m.id)" title="Delete">
+                        <b class="trash-icon">🗑</b>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</section>

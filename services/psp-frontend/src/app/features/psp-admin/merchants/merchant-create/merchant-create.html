@@ -3,7 +3,7 @@
     <header class="authHeader">
       <h4 class="authTitle">Create merchant</h4>
       <p class="authSubtitle">
-        Add a new merchant to the PSP system. Merchant key must be unique.
+        Merchant key must be unique.
       </p>
     </header>
 
@@ -23,6 +23,7 @@
           formControlName="merchantKey"
           placeholder="e.g. acme_store_01"
           autocomplete="off"
+          [class.inputError]="form.controls.merchantKey.touched && form.controls.merchantKey.invalid"
         />
 
         @if (form.controls.merchantKey.touched && form.controls.merchantKey.invalid) {
@@ -40,10 +41,6 @@
             }
           </p>
         }
-
-        <p class="helpText">
-          Tip: use a stable identifier (no spaces). Example: <span class="mono">merchant_123</span>
-        </p>
       </div>
 
       <button class="btnPrimary" type="submit" [disabled]="loading">

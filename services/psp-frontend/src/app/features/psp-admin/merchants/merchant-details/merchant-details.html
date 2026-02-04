@@ -2,25 +2,20 @@
   <div class="header">
     <div>
       <h1 class="title">Merchant details</h1>
-      <p class="subtitle">View merchant info and choose payment methods.</p>
+      <p class="subtitle">View merchant info and edit payment methods.</p>
     </div>
-
     <a class="btnOutline" routerLink="/merchants">Back</a>
   </div>
 
   @if (errorMessage()) {
     <div class="alert">
       {{ errorMessage() }}
-      <button type="button" class="btnGhost" (click)="load()" [disabled]="merchant() === null || saving">
-        Retry
-      </button>
+      <button type="button" class="btnGhost" (click)="load()" [disabled]="saving">Retry</button>
     </div>
   }
 
   @if (successMessage()) {
-    <div class="success">
-      {{ successMessage() }}
-    </div>
+    <div class="success">{{ successMessage() }}</div>
   }
 
   @if (merchant() === null) {
@@ -30,9 +25,7 @@
       <div class="infoGrid">
         <div class="infoBlock">
           <div class="infoLabel">Merchant key</div>
-          <div class="infoValue">
-            {{ merchant()?.merchantKey ?? '-' }}
-          </div>
+          <div class="infoValue mono">{{ merchant()?.merchantKey }}</div>
         </div>
       </div>
 
@@ -40,16 +33,15 @@
 
       <div class="section">
         <h2 class="sectionTitle">Payment methods</h2>
-        <p class="sectionHint">Select at least one.</p>
+        <p class="sectionHint">Assign available methods to this merchant.</p>
 
         <div class="methodsGrid">
-          @for (m of allMethods; track m) {
+          @for (m of allMethods(); track m) {
             <button
               type="button"
               class="methodCard"
               [class.selected]="isSelected(m)"
               (click)="toggleMethod(m)"
-              [attr.aria-pressed]="isSelected(m)"
             >
               <input
                 class="checkbox"
@@ -60,6 +52,8 @@
               />
               <span class="methodText">{{ m }}</span>
             </button>
+          } @empty {
+            <p class="state">No payment methods defined in system.</p>
           }
         </div>
 
@@ -71,7 +65,7 @@
           class="btnPrimary"
           type="button"
           (click)="save()"
-          [disabled]="saving || merchant() === null"
+          [disabled]="saving || form.controls.methods.value.length === 0 || isSameAsInitial()"
         >
           {{ saving ? 'Saving...' : 'Save methods' }}
         </button>

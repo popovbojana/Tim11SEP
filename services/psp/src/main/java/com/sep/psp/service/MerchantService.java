@@ -4,11 +4,11 @@ import com.sep.psp.dto.MerchantResponse;
 import com.sep.psp.entity.Merchant;
 import com.sep.psp.entity.PaymentMethod;
 import com.sep.psp.repository.MerchantRepository;
+import com.sep.psp.repository.PaymentMethodRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 public class MerchantService {
 
     private final MerchantRepository merchantRepository;
+    private final PaymentMethodRepository paymentMethodRepository;
 
     @Transactional
     public MerchantResponse create(String merchantKey) {
@@ -28,7 +29,10 @@ public class MerchantService {
                 .merchantKey(merchantKey)
                 .build();
 
-        merchant.getActiveMethods().add(PaymentMethod.CARD);
+        PaymentMethod defaultMethod = paymentMethodRepository.findByName("CARD")
+                .orElseThrow(() -> new IllegalStateException("Default payment method CARD not found in database"));
+
+        merchant.getActiveMethods().add(defaultMethod);
 
         return toResponse(merchantRepository.save(merchant));
     }
@@ -40,24 +44,23 @@ public class MerchantService {
     }
 
     @Transactional
-    public Set<PaymentMethod> updateActiveMethods(String merchantKey, Set<String> methods) {
-        if (methods == null || methods.isEmpty()) {
-            throw new IllegalArgumentException(("Merchant must have at least 1 active payment method."));
+    public Set<PaymentMethod> updateActiveMethods(String merchantKey, Set<String> methodNames) {
+        if (methodNames == null || methodNames.isEmpty()) {
+            throw new IllegalArgumentException("Merchant must have at least 1 active payment method.");
         }
 
         Merchant merchant = getByMerchantKey(merchantKey);
 
-        Set<PaymentMethod> parsedMethods = methods.stream()
-                .map(String::trim)
-                .map(String::toUpperCase)
-                .map(PaymentMethod::valueOf)
+        Set<PaymentMethod> foundMethods = methodNames.stream()
+                .map(name -> paymentMethodRepository.findByName(name.toUpperCase().trim())
+                        .orElseThrow(() -> new IllegalArgumentException("Payment method not supported: " + name)))
                 .collect(Collectors.toSet());
 
-        if (parsedMethods.isEmpty()) {
+        if (foundMethods.isEmpty()) {
             throw new IllegalArgumentException("Merchant must have at least 1 active payment method.");
         }
 
-        merchant.setActiveMethods(parsedMethods);
+        merchant.setActiveMethods(foundMethods);
 
         return merchantRepository.save(merchant).getActiveMethods();
     }
@@ -66,7 +69,7 @@ public class MerchantService {
     public Set<String> getActiveMethods(String merchantKey) {
         return getByMerchantKey(merchantKey).getActiveMethods()
                 .stream()
-                .map(Enum::name)
+                .map(PaymentMethod::getName)
                 .collect(Collectors.toSet());
     }
 
@@ -88,4 +91,5 @@ public class MerchantService {
                 .activeMethods(getActiveMethods(merchant.getMerchantKey()))
                 .build();
     }
+
 }

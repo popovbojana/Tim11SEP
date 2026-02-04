@@ -1,8 +1,9 @@
 <section class="authPage">
   <div class="authCard">
     <header class="authHeader">
-      <h4 class="authTitle">PSP Admin</h4>
-      <p class="authSubtitle">Sign in to manage merchants and payment methods.</p>
+      <p class="authSubtitle">
+        Sign in to manage merchants and payment methods.
+      </p>
     </header>
 
     @if (error) {
@@ -13,13 +14,31 @@
 
     <form [formGroup]="form" (ngSubmit)="submit()" class="authForm">
       <div class="field">
-        <label class="label" for="email">Email</label>
-        <input id="email" class="input" type="email" formControlName="email" />
+        <label class="label" for="email">Email address</label>
+        <input 
+          id="email" 
+          class="input" 
+          type="email" 
+          formControlName="email" 
+          [class.inputError]="form.controls.email.touched && form.controls.email.invalid"
+        />
+        @if (form.controls.email.touched && form.controls.email.invalid) {
+          <span class="errorText">Please enter a valid email.</span>
+        }
       </div>
 
       <div class="field">
         <label class="label" for="password">Password</label>
-        <input id="password" class="input" type="password" formControlName="password" />
+        <input 
+          id="password" 
+          class="input" 
+          type="password" 
+          formControlName="password" 
+          [class.inputError]="form.controls.password.touched && form.controls.password.invalid"
+        />
+        @if (form.controls.password.touched && form.controls.password.invalid) {
+          <span class="errorText">Password is required.</span>
+        }
       </div>
 
       <button class="btnPrimary" type="submit" [disabled]="loading">

@@ -37,13 +37,12 @@ export class MerchantCreate {
   }
 
   submit(): void {
-    this.error = null;
-
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
+    this.error = null;
     this.loading = true;
 
     const payload: MerchantCreateRequest = this.form.getRawValue();
@@ -55,7 +54,18 @@ export class MerchantCreate {
       },
       error: (err) => {
         this.loading = false;
-        this.error = err?.error?.message ?? 'Merchant creation failed.';
+        
+        if (err.status === 409) {
+          this.error = 'Merchant with this key already exists.';
+        } else if (err.status === 400) {
+          this.error = 'Invalid data provided. Please check the merchant key.';
+        } else if (err.error?.message) {
+          this.error = err.error.message;
+        } else {
+          this.error = 'Failed to create merchant. Please try again.';
+        }
+        
+        console.error('Merchant creation failed:', err);
       },
     });
   }

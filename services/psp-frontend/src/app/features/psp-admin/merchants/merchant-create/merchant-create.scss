@@ -1,128 +1,158 @@
 .authPage {
-  min-height: calc(100vh - 56px);
+  min-height: calc(100vh - 64px);
   display: grid;
   place-items: center;
   padding: 24px 16px;
+  background: #fcfcfc;
 }
 
 .authCard {
   width: 100%;
-  max-width: 520px;
+  max-width: 480px;
   background: #fff;
   border: 1px solid #eaeaea;
-  border-radius: 16px;
-  padding: 18px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
 }
 
 .authHeader {
-  margin-bottom: 14px;
+  margin-bottom: 24px;
 }
 
 .authTitle {
   margin: 0;
-  font-size: 24px;
-  letter-spacing: -0.4px;
+  font-size: 26px;
+  letter-spacing: -0.5px;
+  color: #111;
+  font-weight: 800;
 }
 
 .authSubtitle {
-  margin: 8px 0 0 0;
-  color: #555;
-  font-size: 14px;
-  line-height: 1.4;
+  margin: 10px 0 0 0;
+  color: #666;
+  font-size: 15px;
+  line-height: 1.5;
 }
 
 .alert {
-  border: 1px solid #f3c6c6;
-  background: #fff7f7;
-  color: #7f1d1d;
+  border: 1px solid #fee2e2;
+  background: #fef2f2;
+  color: #991b1b;
   border-radius: 12px;
-  padding: 10px 12px;
-  font-size: 13px;
-  margin: 12px 0;
+  padding: 14px;
+  font-size: 14px;
+  margin-bottom: 20px;
+  font-weight: 500;
 }
 
 .authForm {
   display: grid;
-  gap: 12px;
+  gap: 20px;
 }
 
 .field {
   display: grid;
-  gap: 6px;
+  gap: 8px;
 }
 
 .label {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
-  color: #222;
+  color: #374151;
 }
 
 .input {
   width: 100%;
-  height: 44px;
-  padding: 0 12px;
+  height: 48px;
+  padding: 0 16px;
   border-radius: 12px;
-  border: 1px solid #e5e5e5;
+  border: 1px solid #e5e7eb;
   background: #fff;
   outline: none;
-  font-size: 14px;
+  font-size: 15px;
+  transition: all 0.2s;
 }
 
 .input:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+  border-color: #16a34a;
+  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.1);
 }
 
 .errorText {
-  margin: 2px 0 0 0;
-  font-size: 12px;
-  color: #7f1d1d;
+  margin: 4px 0 0 0;
+  font-size: 13px;
+  color: #dc2626;
+  font-weight: 500;
 }
 
 .helpText {
-  margin: 4px 0 0 0;
-  font-size: 12px;
-  color: #666;
-  line-height: 1.35;
+  margin: 6px 0 0 0;
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.4;
 }
 
 .mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
-    'Courier New', monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-weight: 700;
+  background: #f3f4f6;
+  padding: 2px 4px;
+  border-radius: 4px;
+  color: #111;
 }
 
 .btnPrimary {
   width: 100%;
-  height: 44px;
+  height: 48px;
   border-radius: 12px;
-  border: 1px solid #2563eb;
-  background: #2563eb;
+  border: none;
+  background: #16a34a;
   color: #fff;
-  font-weight: 800;
-  font-size: 14px;
+  font-weight: 700;
+  font-size: 15px;
   cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: #15803d;
 }
 
 .btnPrimary:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
 .hint {
-  margin: 4px 0 0 0;
+  margin: 8px 0 0 0;
   text-align: center;
-  color: #555;
-  font-size: 13px;
+  color: #666;
+  font-size: 14px;
 }
 
 .link {
-  color: #2563eb;
+  color: #16a34a;
   text-decoration: none;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .link:hover {
   text-decoration: underline;
+}
+
+.inputError {
+  border-color: #dc2626 !important;
+  background-color: #fef2f2;
+  
+  &:focus {
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1) !important;
+  }
+}
+
+.errorText {
+  margin: 4px 0 0 0;
+  font-size: 13px;
+  color: #dc2626;
+  font-weight: 500;
 }

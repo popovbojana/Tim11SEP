@@ -1,13 +1,13 @@
-export type PaymentMethod =
-  | 'CARD'
-  | 'QR'
-  | 'PAYPAL'
-  | 'CRYPTO';
+export interface PaymentMethodResponse {
+  id: number;
+  name: string;
+  serviceName: string;
+}
 
 export interface MerchantResponse {
   id: number;
   merchantKey: string;
-  activeMethods: PaymentMethod[];
+  activeMethods: string[];
 }
 
 export type MerchantCreateRequest = {
@@ -15,5 +15,10 @@ export type MerchantCreateRequest = {
 };
 
 export type UpdateMethodsPayload = {
-  methods: PaymentMethod[];
+  methods: string[];
 };
+
+export interface PaymentMethodRequest {
+  name: string;
+  serviceName: string;
+}

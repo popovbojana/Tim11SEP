@@ -3,6 +3,7 @@ package com.sep.psp.controller;
 import com.sep.psp.dto.MerchantCreateRequest;
 import com.sep.psp.dto.MerchantMethodsRequest;
 import com.sep.psp.dto.MerchantResponse;
+import com.sep.psp.entity.PaymentMethod;
 import com.sep.psp.service.MerchantService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -52,8 +53,7 @@ public class MerchantController {
     ) {
         return new ResponseEntity<>(merchantService.updateActiveMethods(merchantKey, request.getMethods())
                 .stream()
-                .map(Enum::name)
+                .map(PaymentMethod::getName)
                 .collect(Collectors.toSet()), HttpStatus.OK);
     }
-
 }

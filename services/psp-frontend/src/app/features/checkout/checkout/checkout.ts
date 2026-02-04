@@ -59,7 +59,7 @@ export class Checkout {
 
   private loadMerchantMethods(merchantKey: string) {
     this.merchantApi.getMethods(merchantKey).subscribe({
-      next: (m) => this.methods.set((m ?? []).map(x => x.toUpperCase())),
+      // next: (m) => this.methods.set((m ?? []).map(x => x.toUpperCase())),
       error: () => this.error.set('Failed to load available payment methods.'),
     });
   }

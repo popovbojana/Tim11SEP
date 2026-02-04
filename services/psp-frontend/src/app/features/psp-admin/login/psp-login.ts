@@ -31,13 +31,12 @@ export class PspLogin {
   }
 
   submit(): void {
-    this.error = null;
-
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
+    this.error = null;
     this.loading = true;
 
     const payload: LoginRequest = this.form.getRawValue();
@@ -49,9 +48,18 @@ export class PspLogin {
         this.router.navigate(['/merchants']);
       },
       error: (err) => {
-        console.log('LOGIN ERROR FULL >>>', err);
         this.loading = false;
-        this.error = JSON.stringify(err);
+        if (err.status === 403 || err.status === 401) {
+          this.error = 'Invalid email or password.';
+        } else if (err.status === 500) {
+          this.error = 'Internal server error. Please try again later.';
+        } else if (err.error?.message) {
+          this.error = err.error.message;
+        } else {
+          this.error = 'An unexpected error occurred.';
+        }
+        
+        console.error('Login failed:', err);
       },
     });
   }

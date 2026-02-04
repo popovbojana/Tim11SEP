@@ -2,7 +2,6 @@
   <div class="header">
     <div>
       <h1 class="title">Merchants</h1>
-      <p class="subtitle">List of merchants using PSP.</p>
     </div>
 
     <a class="btnPrimary" routerLink="/merchants/new">+ Add merchant</a>
@@ -32,7 +31,7 @@
           <tbody>
             @if (merchants()!.length === 0) {
               <tr>
-                <td colspan="4" class="emptyCell">No merchants yet.</td>
+                <td colspan="3" class="emptyCell">No merchants yet.</td>
               </tr>
             } @else {
               @for (m of merchants()!; track trackByMerchantKey($index, m)) {
@@ -41,8 +40,8 @@
 
                   <td>
                     <div class="chips">
-                      @for (method of (m.activeMethods); track method) {
-                        <span class="chip">{{ method }}</span>
+                      @for (methodName of m.activeMethods; track methodName) {
+                        <span class="chip">{{ methodName }}</span>
                       }
                     </div>
                   </td>

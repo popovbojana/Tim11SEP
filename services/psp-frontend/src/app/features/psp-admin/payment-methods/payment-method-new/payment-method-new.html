@@ -1,0 +1,56 @@
+<section class="authPage">
+  <div class="authCard">
+    <header class="authHeader">
+      <h4 class="authTitle">New Payment Method</h4>
+      <p class="authSubtitle">
+        Display name must be unique and service name must match the identifier in Eureka.
+      </p>
+    </header>
+
+    @if (error) {
+      <div class="alert">
+        {{ error }}
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="authForm">
+      <div class="field">
+        <label class="label" for="name">Display Name</label>
+        <input
+          id="name"
+          class="input"
+          type="text"
+          formControlName="name"
+          placeholder="e.g. PAYONEER"
+          [class.inputError]="form.controls.name.touched && form.controls.name.invalid"
+        />
+        @if (form.controls.name.touched && form.controls.name.invalid) {
+          <p class="errorText">Name is required (uppercase letters, numbers, _ or -).</p>
+        }
+      </div>
+
+      <div class="field">
+        <label class="label" for="serviceName">Eureka Service Name</label>
+        <input
+          id="serviceName"
+          class="input"
+          type="text"
+          formControlName="serviceName"
+          placeholder="e.g. PAYONEER-SERVICE"
+          [class.inputError]="form.controls.serviceName.touched && form.controls.serviceName.invalid"
+        />
+        @if (form.controls.serviceName.touched && form.controls.serviceName.invalid) {
+          <p class="errorText">Service name is required to route requests.</p>
+        }
+      </div>
+
+      <button class="btnPrimary" type="submit" [disabled]="loading">
+        {{ loading ? 'Registering...' : 'Register Method' }}
+      </button>
+
+      <p class="hint">
+        <a class="link" routerLink="/payment-methods">Back to list</a>
+      </p>
+    </form>
+  </div>
+</section>
