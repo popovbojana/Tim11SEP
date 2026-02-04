@@ -2,7 +2,9 @@ package com.sep.psp.service;
 
 import com.sep.psp.dto.PaymentMethodRequest;
 import com.sep.psp.dto.PaymentMethodResponse;
+import com.sep.psp.entity.Merchant;
 import com.sep.psp.entity.PaymentMethod;
+import com.sep.psp.repository.MerchantRepository;
 import com.sep.psp.repository.PaymentMethodRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import java.util.stream.Collectors;
 public class PaymentMethodService {
 
     private final PaymentMethodRepository paymentMethodRepository;
+    private final MerchantRepository merchantRepository;
 
     public Set<PaymentMethodResponse> findAll() {
         return paymentMethodRepository.findAll().stream()
@@ -39,6 +42,22 @@ public class PaymentMethodService {
     public void remove(Long id) {
         PaymentMethod method = paymentMethodRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Payment method with ID " + id + " not found."));
+
+        if (paymentMethodRepository.count() <= 1) {
+            throw new IllegalStateException("Cannot delete the last payment method. " +
+                    "The PSP system must maintain at least one available method.");
+        }
+
+        String problematicMerchants = merchantRepository.findAll().stream()
+                .filter(merchant -> merchant.getActiveMethods().size() == 1 &&
+                        merchant.getActiveMethods().contains(method))
+                .map(Merchant::getMerchantKey)
+                .collect(Collectors.joining(", "));
+
+        if (!problematicMerchants.isEmpty()) {
+            throw new IllegalStateException("Cannot delete this method. It is the only active payment method for the " +
+                    "following merchants: [" + problematicMerchants + "]. Please assign them an alternative method first.");
+        }
 
         paymentMethodRepository.deleteRelationFromJoinTable(id);
         paymentMethodRepository.delete(method);

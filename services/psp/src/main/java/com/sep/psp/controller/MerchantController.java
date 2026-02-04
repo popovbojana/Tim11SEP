@@ -56,4 +56,11 @@ public class MerchantController {
                 .map(PaymentMethod::getName)
                 .collect(Collectors.toSet()), HttpStatus.OK);
     }
+
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @DeleteMapping(value = "/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        merchantService.remove(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }

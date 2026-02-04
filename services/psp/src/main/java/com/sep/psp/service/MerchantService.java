@@ -84,6 +84,15 @@ public class MerchantService {
                 .collect(Collectors.toSet());
     }
 
+    @Transactional
+    public void remove(Long id) {
+        Merchant merchant = merchantRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Merchant with ID " + id + " not found."));
+
+        merchant.getActiveMethods().clear();
+        merchantRepository.delete(merchant);
+    }
+
     private MerchantResponse toResponse(Merchant merchant) {
         return MerchantResponse.builder()
                 .id(merchant.getId())
