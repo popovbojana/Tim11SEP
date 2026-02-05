@@ -46,6 +46,17 @@
 
         <div class="formGrid mt-20">
           <div class="field">
+            <label class="label">Bank Account</label>
+            <input class="input" formControlName="bankAccount" placeholder="e.g. 160-0000000000123-45" [class.inputError]="form.controls.bankAccount.touched && form.controls.bankAccount.invalid" />
+          </div>
+          <div class="field">
+            <label class="label">Service Name</label>
+            <input class="input" formControlName="serviceName" />
+          </div>
+        </div>
+
+        <div class="formGrid mt-20">
+          <div class="field">
             <label class="label">Success URL</label>
             <input class="input" formControlName="successUrl" placeholder="https://..." />
           </div>
@@ -56,10 +67,6 @@
           <div class="field">
             <label class="label">Error URL</label>
             <input class="input" formControlName="errorUrl" placeholder="https://..." />
-          </div>
-          <div class="field">
-            <label class="label">Webhook URL</label>
-            <input class="input" formControlName="webhookUrl" placeholder="https://..." />
           </div>
         </div>
 

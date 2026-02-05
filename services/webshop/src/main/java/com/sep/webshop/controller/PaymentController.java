@@ -2,7 +2,7 @@ package com.sep.webshop.controller;
 
 import com.sep.webshop.dto.CreateReservationRequest;
 import com.sep.webshop.dto.payment.InitPaymentResponse;
-import com.sep.webshop.dto.payment.WebshopPaymentCallbackRequest;
+import com.sep.webshop.dto.payment.GenericCallbackRequest;
 import com.sep.webshop.service.PaymentService;
 import com.sep.webshop.service.WebshopPaymentCallbackService;
 import jakarta.validation.Valid;
@@ -28,7 +28,7 @@ public class PaymentController {
     }
 
     @PostMapping("/callback")
-    public ResponseEntity<Void> callback(@RequestBody WebshopPaymentCallbackRequest request) {
+    public ResponseEntity<Void> callback(@RequestBody GenericCallbackRequest request) {
         callbackService.handle(request);
         return ResponseEntity.ok().build();
     }

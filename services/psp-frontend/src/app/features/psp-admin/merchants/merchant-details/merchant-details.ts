@@ -29,6 +29,7 @@ export class MerchantDetails implements OnInit {
   saving = signal(false);
 
   private httpsPattern = /^https:\/\/.+/;
+  private bankAccountPattern = /^[0-9-]{13,22}$/;
 
   form = this.fb.nonNullable.group({
     fullName: ['', [Validators.required]],
@@ -36,7 +37,8 @@ export class MerchantDetails implements OnInit {
     successUrl: ['', [Validators.required, Validators.pattern(this.httpsPattern)]],
     failedUrl: ['', [Validators.required, Validators.pattern(this.httpsPattern)]],
     errorUrl: ['', [Validators.required, Validators.pattern(this.httpsPattern)]],
-    webhookUrl: ['', [Validators.pattern(this.httpsPattern)]],
+    serviceName: ['', [Validators.required, Validators.minLength(3)]],
+    bankAccount: ['', [Validators.required, Validators.pattern(this.bankAccountPattern)]],
     methods: [[] as string[], [Validators.required, Validators.minLength(1)]],
   });
 
@@ -59,7 +61,8 @@ export class MerchantDetails implements OnInit {
            current.successUrl === initial.successUrl &&
            current.failedUrl === initial.failedUrl &&
            current.errorUrl === initial.errorUrl &&
-           (current.webhookUrl || '') === (initial.webhookUrl || '') &&
+           current.serviceName === initial.serviceName &&
+           current.bankAccount === initial.bankAccount &&
            methodsMatch;
   });
 
@@ -97,7 +100,8 @@ export class MerchantDetails implements OnInit {
           successUrl: res.successUrl,
           failedUrl: res.failedUrl,
           errorUrl: res.errorUrl,
-          webhookUrl: res.webhookUrl ?? '',
+          serviceName: res.serviceName,
+          bankAccount: res.bankAccount,
           methods: [...res.activeMethods]
         });
         this.form.markAsPristine();
@@ -127,7 +131,11 @@ export class MerchantDetails implements OnInit {
     this.successMessage.set(null);
     this.saving.set(true);
 
-    const payload: MerchantUpdateRequest = this.form.getRawValue();
+    const rawValues = this.form.getRawValue();
+    const payload: MerchantUpdateRequest = {
+      ...rawValues,
+      serviceName: rawValues.serviceName.toUpperCase().trim()
+    };
 
     this.merchantApi.update(this.merchantKey, payload).subscribe({
       next: (updated) => {

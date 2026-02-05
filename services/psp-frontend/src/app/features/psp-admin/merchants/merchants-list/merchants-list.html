@@ -24,6 +24,8 @@
           <thead>
             <tr>
               <th>Merchant key</th>
+              <th>Full name</th>
+              <th>Service name</th>
               <th>Active methods</th>
               <th class="actionsCol">Actions</th>
             </tr>
@@ -38,6 +40,10 @@
               @for (m of merchants()!; track trackByMerchantKey($index, m)) {
                 <tr>
                   <td class="mono">{{ m.merchantKey }}</td>
+
+                  <td class="mono">{{ m.fullName }}</td>
+
+                  <td class="mono">{{ m.serviceName }}</td>
 
                   <td>
                     <div class="chips">

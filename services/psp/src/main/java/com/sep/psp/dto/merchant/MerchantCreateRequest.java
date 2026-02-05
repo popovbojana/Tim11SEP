@@ -37,8 +37,13 @@ public class MerchantCreateRequest {
     @NotBlank
     private String errorUrl;
 
-    private String webhookUrl;
+    @NotBlank
+    private String serviceName;
 
     @NotEmpty(message = "At least one payment method must be selected")
     private Set<String> methods;
+
+    @NotBlank
+    private String bankAccount;
+
 }

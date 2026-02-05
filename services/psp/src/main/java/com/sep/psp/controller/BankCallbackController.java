@@ -14,9 +14,9 @@ public class BankCallbackController {
 
     private final PaymentService paymentService;
 
-    @PostMapping("/callback")
-    public ResponseEntity<Void> callback(@RequestBody BankCallbackRequest request) {
-        paymentService.handleBankCallback(request);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
+//    @PostMapping("/callback")
+//    public ResponseEntity<Void> callback(@RequestBody BankCallbackRequest request) {
+//        paymentService.handleBankCallback(request);
+//        return new ResponseEntity<>(HttpStatus.OK);
+//    }
 }

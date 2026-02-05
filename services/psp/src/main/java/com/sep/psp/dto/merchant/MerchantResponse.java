@@ -18,7 +18,8 @@ public class MerchantResponse {
     private String successUrl;
     private String failedUrl;
     private String errorUrl;
-    private String webhookUrl;
+    private String serviceName;
+    private String bankAccount;
     private Set<String> activeMethods;
 
 }

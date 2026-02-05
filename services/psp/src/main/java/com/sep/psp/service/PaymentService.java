@@ -6,10 +6,9 @@ import org.springframework.http.HttpHeaders;
 public interface PaymentService {
 
     InitPaymentResponse initPayment(InitPaymentRequest request);
-    StartPaymentResponse startCardPayment(Long paymentId);
-    StartPaymentResponse startQrPayment(Long paymentId);
     PaymentResponse getPayment(Long id);
-    void handleBankCallback(BankCallbackRequest request);
-    HttpHeaders finalize(Long bankPaymentId);
+    StartPaymentResponse startPayment(Long paymentId, String methodName);
+    void handleCallback(GenericCallbackRequest request);
+    HttpHeaders finalize(Long externalPaymentId);
 
 }

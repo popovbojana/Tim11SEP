@@ -41,7 +41,8 @@ public class MerchantServiceImpl implements MerchantService {
                 .successUrl(request.getSuccessUrl())
                 .failedUrl(request.getFailedUrl())
                 .errorUrl(request.getErrorUrl())
-                .webhookUrl(request.getWebhookUrl())
+                .serviceName(request.getServiceName())
+                .bankAccount(request.getBankAccount())
                 .activeMethods(selectedMethods)
                 .build();
 
@@ -58,7 +59,8 @@ public class MerchantServiceImpl implements MerchantService {
         merchant.setSuccessUrl(request.getSuccessUrl());
         merchant.setFailedUrl(request.getFailedUrl());
         merchant.setErrorUrl(request.getErrorUrl());
-        merchant.setWebhookUrl(request.getWebhookUrl());
+        merchant.setServiceName(request.getServiceName());
+        merchant.setBankAccount(request.getBankAccount());
         merchant.setActiveMethods(mapMethods(request.getMethods()));
 
         return toResponse(merchantRepository.save(merchant));
@@ -126,7 +128,8 @@ public class MerchantServiceImpl implements MerchantService {
                 .successUrl(merchant.getSuccessUrl())
                 .failedUrl(merchant.getFailedUrl())
                 .errorUrl(merchant.getErrorUrl())
-                .webhookUrl(merchant.getWebhookUrl())
+                .serviceName(merchant.getServiceName())
+                .bankAccount(merchant.getBankAccount())
                 .activeMethods(methodNames)
                 .build();
     }

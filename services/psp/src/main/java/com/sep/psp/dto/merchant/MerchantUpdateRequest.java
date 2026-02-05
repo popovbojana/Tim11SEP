@@ -27,7 +27,11 @@ public class MerchantUpdateRequest {
     @NotBlank
     private String errorUrl;
 
-    private String webhookUrl;
+    @NotBlank
+    private String serviceName;
+
+    @NotBlank
+    private String bankAccount;
 
     @NotEmpty(message = "At least one payment method must be selected")
     private Set<String> methods;

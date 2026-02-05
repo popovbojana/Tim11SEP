@@ -45,31 +45,41 @@
 
       <div class="formGrid">
         <div class="field">
+          <label class="label">Bank Account</label>
+          <input class="input" formControlName="bankAccount" placeholder="160-0000000000123-45" [class.inputError]="form.controls.bankAccount.touched && form.controls.bankAccount.invalid" />
+          @if (form.controls.bankAccount.touched && form.controls.bankAccount.invalid) {
+            <p class="errorText">Valid bank account is required.</p>
+          }
+        </div>
+        <div class="field">
+          <label class="label">Eureka Service Name</label>
+          <input class="input" formControlName="serviceName" [class.inputError]="form.controls.serviceName.touched && form.controls.serviceName.invalid" />
+          @if (form.controls.serviceName.touched && form.controls.serviceName.invalid) {
+            <p class="errorText">Eureka service name is required.</p>
+          }
+        </div>
+      </div>
+
+      <div class="formGrid mt-20">
+        <div class="field">
           <label class="label">Success URL</label>
-          <input class="input" formControlName="successUrl" placeholder="https://your-shop.com/success" [class.inputError]="form.controls.successUrl.touched && form.controls.successUrl.invalid" />
+          <input class="input" formControlName="successUrl" placeholder="https://..." [class.inputError]="form.controls.successUrl.touched && form.controls.successUrl.invalid" />
           @if (form.controls.successUrl.touched && form.controls.successUrl.invalid) {
             <p class="errorText">Must start with https://</p>
           }
         </div>
         <div class="field">
           <label class="label">Failed URL</label>
-          <input class="input" formControlName="failedUrl" placeholder="https://your-shop.com/failed" [class.inputError]="form.controls.failedUrl.touched && form.controls.failedUrl.invalid" />
+          <input class="input" formControlName="failedUrl" placeholder="https://..." [class.inputError]="form.controls.failedUrl.touched && form.controls.failedUrl.invalid" />
           @if (form.controls.failedUrl.touched && form.controls.failedUrl.invalid) {
             <p class="errorText">Must start with https://</p>
           }
         </div>
         <div class="field">
           <label class="label">Error URL</label>
-          <input class="input" formControlName="errorUrl" placeholder="https://your-shop.com/error" [class.inputError]="form.controls.errorUrl.touched && form.controls.errorUrl.invalid" />
+          <input class="input" formControlName="errorUrl" placeholder="https://..." [class.inputError]="form.controls.errorUrl.touched && form.controls.errorUrl.invalid" />
           @if (form.controls.errorUrl.touched && form.controls.errorUrl.invalid) {
             <p class="errorText">Must start with https://</p>
-          }
-        </div>
-        <div class="field">
-          <label class="label">Webhook URL (Optional)</label>
-          <input class="input" formControlName="webhookUrl" placeholder="https://api.your-shop.com/callback" [class.inputError]="form.controls.webhookUrl.touched && form.controls.webhookUrl.invalid" />
-          @if (form.controls.webhookUrl.touched && form.controls.webhookUrl.invalid) {
-            <p class="errorText">If provided, must start with https://</p>
           }
         </div>
       </div>

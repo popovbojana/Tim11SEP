@@ -1,6 +1,6 @@
 package com.sep.webshop.service;
 
-import com.sep.webshop.dto.payment.WebshopPaymentCallbackRequest;
+import com.sep.webshop.dto.payment.GenericCallbackRequest;
 import com.sep.webshop.entity.PaymentMethod;
 import com.sep.webshop.entity.ReservationStatus;
 import jakarta.transaction.Transactional;
@@ -16,7 +16,7 @@ public class WebshopPaymentCallbackService {
     private final RentalReservationService reservationService;
 
     @Transactional
-    public void handle(WebshopPaymentCallbackRequest request) {
+    public void handle(GenericCallbackRequest request) {
         if (request == null || request.getMerchantOrderId() == null || request.getMerchantOrderId().isBlank()) {
             throw new IllegalArgumentException("Missing merchantOrderId");
         }
@@ -24,8 +24,8 @@ public class WebshopPaymentCallbackService {
         ReservationStatus newStatus = mapReservationStatus(request.getStatus());
         PaymentMethod method = mapPaymentMethod(request.getPaymentMethod());
 
-        Instant paidAt = request.getPaidAt();
-        String reference = request.getPaymentReference();
+        Instant paidAt = request.getAcquirerTimestamp();
+        String reference = request.getGlobalTransactionId();
 
         reservationService.updateFromPaymentCallback(
                 request.getMerchantOrderId(),

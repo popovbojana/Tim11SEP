@@ -1,16 +1,20 @@
-import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, inject, signal } from '@angular/core';
+import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { Navbar } from './shared/components/navbar/navbar';
+import { filter, map } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [RouterOutlet, Navbar],
   template: `
-    <app-navbar></app-navbar>
+    @if (showNavbar()) {
+      <app-navbar></app-navbar>
+    }
 
-    <main class="page">
-      <div class="container">
+    <main [class.page]="showNavbar()">
+      <div [class.container]="showNavbar()">
         <router-outlet></router-outlet>
       </div>
     </main>
@@ -32,5 +36,14 @@ import { Navbar } from './shared/components/navbar/navbar';
   ],
 })
 export class App {
+  private router = inject(Router);
   protected readonly title = signal('psp-frontend');
+
+  showNavbar = toSignal(
+    this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      map((event: NavigationEnd) => !event.urlAfterRedirects.includes('/checkout'))
+    ),
+    { initialValue: true }
+  );
 }

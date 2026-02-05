@@ -1,21 +1,22 @@
 package com.sep.psp.service.impl;
 
-import com.sep.psp.client.BankClient;
-import com.sep.psp.client.WebshopClient;
 import com.sep.psp.dto.payment.*;
-import com.sep.psp.entity.Payment;
-import com.sep.psp.entity.PaymentStatus;
+import com.sep.psp.entity.*;
 import com.sep.psp.exception.BadRequestException;
 import com.sep.psp.exception.NotFoundException;
+import com.sep.psp.repository.MerchantRepository;
+import com.sep.psp.repository.PaymentMethodRepository;
 import com.sep.psp.repository.PaymentRepository;
 import com.sep.psp.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -23,11 +24,9 @@ import java.util.UUID;
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
-    private final BankClient bankClient;
-    private final WebshopClient webshopClient;
-
-    private static final String NOT_FOUND_MSG = "Payment with id: %d not found.";
-    private static final String BANK_NOT_FOUND_MSG = "Payment with bank payment id: %d not found.";
+    private final PaymentMethodRepository paymentMethodRepository;
+    private final MerchantRepository merchantRepository;
+    private final RestTemplate restTemplate;
 
     @Override
     @Transactional
@@ -42,12 +41,11 @@ public class PaymentServiceImpl implements PaymentService {
                 .successUrl(request.getSuccessUrl())
                 .failedUrl(request.getFailedUrl())
                 .errorUrl(request.getErrorUrl())
-                .stan(generateStan())
+                .stan(UUID.randomUUID().toString())
                 .pspTimestamp(Instant.now())
                 .build();
 
         Payment saved = paymentRepository.save(payment);
-
         return InitPaymentResponse.builder()
                 .paymentId(saved.getId())
                 .redirectUrl("/checkout/" + saved.getId())
@@ -56,222 +54,139 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional
-    public StartPaymentResponse startCardPayment(Long paymentId) {
-        return startBankPayment(paymentId, "CARD");
+    public StartPaymentResponse startPayment(Long paymentId, String methodName) {
+        Payment payment = getById(paymentId);
+
+        if (payment.getStatus() == PaymentStatus.IN_PROGRESS && payment.getExternalRedirectUrl() != null) {
+            return StartPaymentResponse.builder().redirectUrl(payment.getExternalRedirectUrl()).build();
+        }
+
+        if (isFinal(payment.getStatus())) {
+            throw new BadRequestException("Payment is already finished.");
+        }
+
+        Merchant merchant = merchantRepository.findByMerchantKey(payment.getMerchantKey())
+                .orElseThrow(() -> new NotFoundException("Merchant not found"));
+
+        PaymentMethod method = paymentMethodRepository.findByName(methodName.toUpperCase())
+                .orElseThrow(() -> new NotFoundException("Method not supported: " + methodName));
+
+        payment.setStatus(PaymentStatus.IN_PROGRESS);
+        payment.setPaymentMethod(methodName.toUpperCase());
+        paymentRepository.save(payment);
+
+        GenericPaymentRequest genericReq = GenericPaymentRequest.builder()
+                .pspPaymentId(payment.getId())
+                .amount(payment.getAmount())
+                .currency(payment.getCurrency())
+                .stan(payment.getStan())
+                .pspTimestamp(Instant.now())
+                .metadata(Map.of(
+                        "selectedMethod", methodName,
+                        "receiverName", merchant.getFullName(),
+                        "receiverAccount", merchant.getBankAccount()
+                ))
+                .build();
+
+        String url = "https://" + method.getServiceName() + "/api/payments/init";
+        try {
+            GenericPaymentResponse response = restTemplate.postForObject(url, genericReq, GenericPaymentResponse.class);
+
+            if (response == null || response.getRedirectUrl() == null) {
+                throw new BadRequestException("Provider failed to initialize.");
+            }
+
+            payment.setExternalPaymentId(response.getExternalPaymentId());
+            payment.setExternalRedirectUrl(response.getRedirectUrl());
+            paymentRepository.save(payment);
+
+            return StartPaymentResponse.builder().redirectUrl(response.getRedirectUrl()).build();
+        } catch (Exception e) {
+            payment.setStatus(PaymentStatus.ERROR);
+            paymentRepository.save(payment);
+            e.printStackTrace();
+            throw new BadRequestException("Communication error with provider.");
+        }
     }
 
     @Override
     @Transactional
-    public StartPaymentResponse startQrPayment(Long paymentId) {
-        return startBankPayment(paymentId, "QR");
+    public void handleCallback(GenericCallbackRequest request) {
+        Payment payment = getById(request.getPspPaymentId());
+        if (isFinal(payment.getStatus())) return;
+
+        payment.setExternalPaymentId(request.getExternalPaymentId());
+        payment.setStatus(mapStatus(request.getStatus()));
+        payment.setGlobalTransactionId(request.getGlobalTransactionId());
+        payment.setAcquirerTimestamp(request.getAcquirerTimestamp());
+        payment.setStan(request.getStan());
+
+        paymentRepository.save(payment);
+
+        request.setMerchantOrderId(payment.getMerchantOrderId());
+        request.setPaymentMethod(payment.getPaymentMethod());
+
+        Merchant merchant = merchantRepository.findByMerchantKey(payment.getMerchantKey())
+                .orElse(null);
+
+        if (merchant != null && merchant.getServiceName() != null && !merchant.getServiceName().isBlank()) {
+            try {
+                restTemplate.postForObject("https://" + merchant.getServiceName() + "/api/payments/callback", request, Void.class);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
     @Transactional(readOnly = true)
     public PaymentResponse getPayment(Long id) {
         Payment payment = getById(id);
-
         return PaymentResponse.builder()
-                .id(payment.getId())
-                .amount(payment.getAmount())
-                .currency(payment.getCurrency())
-                .status(payment.getStatus())
-                .merchantKey(payment.getMerchantKey())
-                .merchantOrderId(payment.getMerchantOrderId())
-                .successUrl(payment.getSuccessUrl())
-                .failedUrl(payment.getFailedUrl())
-                .errorUrl(payment.getErrorUrl())
-                .build();
+                .id(payment.getId()).amount(payment.getAmount()).currency(payment.getCurrency())
+                .status(payment.getStatus()).merchantKey(payment.getMerchantKey())
+                .merchantOrderId(payment.getMerchantOrderId()).successUrl(payment.getSuccessUrl())
+                .failedUrl(payment.getFailedUrl()).errorUrl(payment.getErrorUrl()).build();
     }
 
     @Override
     @Transactional
-    public void handleBankCallback(BankCallbackRequest request) {
-        if (request == null || request.getPspPaymentId() == null) {
-            throw new BadRequestException("Missing pspPaymentId.");
-        }
-
-        Payment payment = getById(request.getPspPaymentId());
-
-        if (isFinal(payment.getStatus())) {
-            return;
-        }
-
-        if (request.getBankPaymentId() != null) {
-            payment.setBankPaymentId(request.getBankPaymentId());
-        }
-
-        if (request.getStan() != null && !request.getStan().isBlank()) {
-            payment.setStan(request.getStan());
-        }
-
-        if (request.getPspTimestamp() != null) {
-            payment.setPspTimestamp(request.getPspTimestamp());
-        }
-
-        PaymentStatus mapped = mapBankStatus(request.getStatus());
-        if (mapped != null) {
-            payment.setStatus(mapped);
-        }
-
-        if (request.getGlobalTransactionId() != null && !request.getGlobalTransactionId().isBlank()) {
-            payment.setGlobalTransactionId(request.getGlobalTransactionId());
-        }
-
-        if (request.getAcquirerTimestamp() != null) {
-            payment.setAcquirerTimestamp(request.getAcquirerTimestamp());
-        }
-
-        paymentRepository.save(payment);
-
-        if (isFinal(payment.getStatus())) {
-            String method = "CARD";
-            if (payment.getBankRedirectUrl() != null && payment.getBankRedirectUrl().toLowerCase().contains("/qr")) {
-                method = "QR";
-            }
-
-            webshopClient.sendPaymentCallback(
-                    WebshopPaymentCallbackRequest.builder()
-                            .merchantOrderId(payment.getMerchantOrderId())
-                            .pspPaymentId(payment.getId())
-                            .status(payment.getStatus().name())
-                            .paymentReference(payment.getGlobalTransactionId())
-                            .paidAt(payment.getStatus() == PaymentStatus.SUCCESS ? Instant.now() : null)
-                            .paymentMethod(method)
-                            .build()
-            );
-        }
-    }
-
-    @Override
-    @Transactional
-    public HttpHeaders finalize(Long bankPaymentId) {
-        Payment payment = paymentRepository.findByBankPaymentId(bankPaymentId)
-                .orElseThrow(() -> new NotFoundException(String.format(BANK_NOT_FOUND_MSG, bankPaymentId)));
+    public HttpHeaders finalize(Long externalPaymentId) {
+        Payment payment = paymentRepository.findByExternalPaymentId(externalPaymentId)
+                .orElseThrow(() -> new NotFoundException("Payment not found."));
 
         waitForFinalStatus(payment.getId());
 
-        Payment refreshed = getById(payment.getId());
-
-        if (!isFinal(refreshed.getStatus())) {
-            refreshed.setStatus(PaymentStatus.ERROR);
-            paymentRepository.save(refreshed);
-        }
-
-        String targetUrl = resolveTargetUrl(refreshed);
-
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Location", targetUrl);
+        headers.add("Location", resolveTargetUrl(getById(payment.getId())));
         return headers;
     }
 
-    private StartPaymentResponse startBankPayment(Long paymentId, String method) {
-        Payment payment = getById(paymentId);
-
-        if (payment.getStatus() == PaymentStatus.IN_PROGRESS
-                && payment.getBankRedirectUrl() != null
-                && !payment.getBankRedirectUrl().isBlank()) {
-            return StartPaymentResponse.builder()
-                    .redirectUrl(payment.getBankRedirectUrl())
-                    .build();
-        }
-
-        if (isFinal(payment.getStatus())) {
-            throw new BadRequestException("Payment is already finished: " + payment.getStatus());
-        }
-
-        payment.setStatus(PaymentStatus.IN_PROGRESS);
-        payment.setPspTimestamp(Instant.now());
-        paymentRepository.save(payment);
-
-        InitBankPaymentRequest bankReq = InitBankPaymentRequest.builder()
-                .pspPaymentId(payment.getId())
-                .amount(payment.getAmount())
-                .currency(payment.getCurrency())
-                .stan(payment.getStan())
-                .pspTimestamp(payment.getPspTimestamp())
-                .build();
-
-        InitBankPaymentResponse bankInit;
-        try {
-            if ("QR".equalsIgnoreCase(method)) {
-                bankInit = bankClient.initBankQrPayment(bankReq);
-            } else {
-                bankInit = bankClient.initBankPayment(bankReq);
-            }
-        } catch (Exception e) {
-            payment.setStatus(PaymentStatus.ERROR);
-            paymentRepository.save(payment);
-            throw e;
-        }
-
-        if (bankInit == null || bankInit.getRedirectUrl() == null || bankInit.getRedirectUrl().isBlank()) {
-            payment.setStatus(PaymentStatus.ERROR);
-            paymentRepository.save(payment);
-            throw new BadRequestException("Bank initialization did not return a valid redirect URL.");
-        }
-
-        payment.setBankPaymentId(bankInit.getBankPaymentId());
-        payment.setBankRedirectUrl(bankInit.getRedirectUrl());
-        paymentRepository.save(payment);
-
-        return StartPaymentResponse.builder()
-                .redirectUrl(bankInit.getRedirectUrl())
-                .build();
-    }
-
     private Payment getById(Long id) {
-        return paymentRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(String.format(NOT_FOUND_MSG, id)));
+        return paymentRepository.findById(id).orElseThrow(() -> new NotFoundException("Payment not found."));
     }
 
     private void waitForFinalStatus(Long paymentId) {
         Instant start = Instant.now();
-        Duration maxWait = Duration.ofMillis(1200);
-        Duration sleep = Duration.ofMillis(150);
-
-        while (Duration.between(start, Instant.now()).compareTo(maxWait) < 0) {
+        while (Duration.between(start, Instant.now()).toMillis() < 1200) {
             Payment p = paymentRepository.findById(paymentId).orElse(null);
-            if (p == null) return;
-            if (isFinal(p.getStatus())) return;
-
-            try {
-                Thread.sleep(sleep.toMillis());
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return;
-            }
+            if (p != null && isFinal(p.getStatus())) return;
+            try { Thread.sleep(150); } catch (InterruptedException e) { Thread.currentThread().interrupt(); return; }
         }
     }
 
     private boolean isFinal(PaymentStatus status) {
-        return status == PaymentStatus.SUCCESS
-                || status == PaymentStatus.FAILED
-                || status == PaymentStatus.ERROR
-                || status == PaymentStatus.CANCELED;
+        return status == PaymentStatus.SUCCESS || status == PaymentStatus.FAILED || status == PaymentStatus.ERROR || status == PaymentStatus.CANCELED;
     }
 
-    private PaymentStatus mapBankStatus(String bankStatus) {
-        if (bankStatus == null) return PaymentStatus.ERROR;
-
-        if ("SUCCESS".equalsIgnoreCase(bankStatus)) return PaymentStatus.SUCCESS;
-        if ("FAILED".equalsIgnoreCase(bankStatus)) return PaymentStatus.FAILED;
-        if ("ERROR".equalsIgnoreCase(bankStatus)) return PaymentStatus.ERROR;
-        if ("IN_PROGRESS".equalsIgnoreCase(bankStatus) || "CREATED".equalsIgnoreCase(bankStatus))
-            return PaymentStatus.IN_PROGRESS;
-
-        return PaymentStatus.ERROR;
+    private PaymentStatus mapStatus(String status) {
+        try { return PaymentStatus.valueOf(status.toUpperCase()); }
+        catch (Exception e) { return PaymentStatus.ERROR; }
     }
 
     private String resolveTargetUrl(Payment payment) {
-        PaymentStatus status = payment.getStatus();
-
-        if (status == PaymentStatus.SUCCESS) return payment.getSuccessUrl();
-        if (status == PaymentStatus.FAILED) return payment.getFailedUrl();
+        if (payment.getStatus() == PaymentStatus.SUCCESS) return payment.getSuccessUrl();
+        if (payment.getStatus() == PaymentStatus.FAILED) return payment.getFailedUrl();
         return payment.getErrorUrl();
-    }
-
-    private String generateStan() {
-        return UUID.randomUUID().toString();
     }
 }

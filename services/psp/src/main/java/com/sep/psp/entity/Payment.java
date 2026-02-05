@@ -25,7 +25,7 @@ public class Payment {
     private String merchantKey;
 
     @Column(nullable = false)
-    private double amount;
+    private Double amount;
 
     @Column(nullable = false)
     private String currency;
@@ -46,11 +46,11 @@ public class Payment {
     @Column(nullable = false, length = 2048)
     private String errorUrl;
 
-    @Column(name = "bank_payment_id")
-    private Long bankPaymentId;
+    @Column(name = "external_payment_id")
+    private Long externalPaymentId;
 
-    @Column(length = 2048)
-    private String bankRedirectUrl;
+    @Column(name = "external_redirect_url", length = 2048)
+    private String externalRedirectUrl;
 
     @Column(nullable = false)
     private String stan;
@@ -62,5 +62,7 @@ public class Payment {
     private String globalTransactionId;
 
     private Instant acquirerTimestamp;
+
+    private String paymentMethod;
 
 }

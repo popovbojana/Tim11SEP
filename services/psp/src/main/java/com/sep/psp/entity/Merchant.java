@@ -40,8 +40,11 @@ public class Merchant {
     @Column(nullable = false)
     private String errorUrl;
 
-    @Column
-    private String webhookUrl;
+    @Column(nullable = false)
+    private String serviceName;
+
+    @Column(nullable = false)
+    private String bankAccount;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

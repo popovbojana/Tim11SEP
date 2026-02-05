@@ -25,6 +25,7 @@ export class MerchantCreate implements OnInit {
   dropdownOpen = signal(false);
 
   private httpsPattern = /^https:\/\/.+/;
+  private bankAccountPattern = /^[0-9-]{13,22}$/;
 
   form = this.fb.nonNullable.group({
     merchantKey: ['', [Validators.required, Validators.minLength(3), Validators.pattern(/^[A-Za-z0-9._-]+$/)]],
@@ -34,7 +35,8 @@ export class MerchantCreate implements OnInit {
     successUrl: ['', [Validators.required, Validators.pattern(this.httpsPattern)]],
     failedUrl: ['', [Validators.required, Validators.pattern(this.httpsPattern)]],
     errorUrl: ['', [Validators.required, Validators.pattern(this.httpsPattern)]],
-    webhookUrl: ['', [Validators.pattern(this.httpsPattern)]],
+    serviceName: ['', [Validators.required, Validators.minLength(3)]], 
+    bankAccount: ['', [Validators.required, Validators.pattern(this.bankAccountPattern)]],
     methods: [[] as string[], [Validators.required, Validators.minLength(1)]]
   });
 
@@ -62,7 +64,11 @@ export class MerchantCreate implements OnInit {
     this.errorMessage.set(null);
     this.loading.set(true);
 
-    const payload: MerchantCreateRequest = this.form.getRawValue();
+    const rawValues = this.form.getRawValue();
+    const payload: MerchantCreateRequest = {
+      ...rawValues,
+      serviceName: rawValues.serviceName.toUpperCase().trim()
+    };
 
     this.merchantApi.create(payload).subscribe({
       next: () => {

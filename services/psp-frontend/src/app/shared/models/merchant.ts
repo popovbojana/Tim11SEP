@@ -12,7 +12,8 @@ export interface MerchantResponse {
   successUrl: string;
   failedUrl: string;
   errorUrl: string;
-  webhookUrl?: string;
+  serviceName: string;
+  bankAccount: string;
   activeMethods: string[];
 }
 
@@ -24,7 +25,8 @@ export interface MerchantCreateRequest {
   successUrl: string;
   failedUrl: string;
   errorUrl: string;
-  webhookUrl?: string;
+  serviceName: string;
+  bankAccount: string;
   methods: string[];
 }
 
@@ -34,7 +36,8 @@ export interface MerchantUpdateRequest {
   successUrl: string;
   failedUrl: string;
   errorUrl: string;
-  webhookUrl?: string;
+  serviceName: string;
+  bankAccount: string;
   methods: string[];
 }
 
