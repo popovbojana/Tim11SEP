@@ -1,7 +1,7 @@
 package com.sep.webshop.controller;
 
 import com.sep.webshop.dto.RentalOfferDTO;
-import com.sep.webshop.service.RentalOfferService;
+import com.sep.webshop.service.impl.RentalOfferServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +17,7 @@ import java.util.List;
 @RequestMapping("/api/offers")
 public class RentalOfferController {
 
-    private final RentalOfferService offerService;
+    private final RentalOfferServiceImpl offerService;
 
     @GetMapping
     public ResponseEntity<List<RentalOfferDTO>> getActiveOffers() {

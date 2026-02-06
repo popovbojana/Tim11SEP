@@ -11,15 +11,10 @@ import lombok.*;
 public class VehicleDTO {
 
     private Long id;
-
     private VehicleType type;
-
     private String brand;
-
     private String model;
-
     private double pricePerDay;
-
     private String description;
 
 }

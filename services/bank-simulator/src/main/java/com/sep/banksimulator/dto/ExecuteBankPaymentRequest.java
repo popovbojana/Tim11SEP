@@ -20,5 +20,6 @@ public class ExecuteBankPaymentRequest {
     private String cardHolderName;
 
     @NotBlank
-    private String expiry; // "MM/YY"
+    private String expiry;
+
 }

@@ -8,8 +8,10 @@ import com.sep.banksimulator.dto.card.*;
 import com.sep.banksimulator.dto.qr.*;
 import com.sep.banksimulator.entity.BankPayment;
 import com.sep.banksimulator.entity.BankPaymentStatus;
+import com.sep.banksimulator.exception.BadRequestException;
 import com.sep.banksimulator.repository.BankPaymentRepository;
 import com.sep.banksimulator.service.BankPaymentService;
+import jakarta.ws.rs.NotAcceptableException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -82,7 +84,7 @@ public class BankPaymentServiceImpl implements BankPaymentService {
         GenerateQrResponse res = qrServiceClient.generate(req);
 
         if (res == null || res.getQrImageBase64() == null) {
-            throw new IllegalStateException("QR service failed.");
+            throw new BadRequestException("QR service failed.");
         }
 
         return QrImageResponse.builder()
@@ -185,12 +187,13 @@ public class BankPaymentServiceImpl implements BankPaymentService {
     }
 
     private BankPayment getById(Long id) {
-        return bankPaymentRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Payment not found"));
+        return bankPaymentRepository.findById(id)
+                .orElseThrow(() -> new NotAcceptableException("Payment with id: " + id + "not found."));
     }
 
     private void checkFinalStatus(BankPayment p) {
         if (p.getStatus() == BankPaymentStatus.SUCCESS || p.getStatus() == BankPaymentStatus.FAILED) {
-            throw new IllegalStateException("Payment already finished");
+            throw new BadRequestException("Payment already finished.");
         }
     }
 

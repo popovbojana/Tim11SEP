@@ -40,4 +40,5 @@ public class GenerateQrRequest {
 
     @NotBlank
     private String pspTimestamp;
+
 }

@@ -34,17 +34,14 @@
           <tbody>
             @if (merchants()!.length === 0) {
               <tr>
-                <td colspan="3" class="emptyCell">No merchants yet.</td>
+                <td colspan="5" class="emptyCell">No merchants yet.</td>
               </tr>
             } @else {
               @for (m of merchants()!; track trackByMerchantKey($index, m)) {
                 <tr>
                   <td class="mono">{{ m.merchantKey }}</td>
-
                   <td class="mono">{{ m.fullName }}</td>
-
                   <td class="mono">{{ m.serviceName }}</td>
-
                   <td>
                     <div class="chips">
                       @for (methodName of m.activeMethods; track methodName) {
@@ -52,7 +49,6 @@
                       }
                     </div>
                   </td>
-
                   <td class="actionsCol">
                     <div class="actionGroup">
                       <a class="btnIcon" [routerLink]="['/merchants', m.merchantKey]" title="Edit">

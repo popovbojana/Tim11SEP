@@ -10,7 +10,6 @@ import lombok.*;
 public class PaymentMethodRequest {
 
     private String name;
-
     private String serviceName;
 
 }

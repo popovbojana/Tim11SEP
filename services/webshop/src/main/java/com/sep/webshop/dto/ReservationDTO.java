@@ -16,36 +16,21 @@ import java.util.List;
 public class ReservationDTO {
 
     private Long id;
-
     private String customerEmail;
-
     private Long offerId;
-
     private String offerTitle;
-
     private LocalDate startDate;
-
     private LocalDate endDate;
-
     private ReservationStatus status;
-
     private double totalPrice;
-
     private PaymentMethod paymentMethod;
-
     private String paymentReference;
-
     private Instant paidAt;
-
     private Instant createdAt;
-
     private VehicleDTO vehicle;
-
     private InsurancePackageDTO insurancePackage;
-
     private List<AdditionalServiceDTO> additionalServices;
-
     private String merchantOrderId;
-
     private Long pspPaymentId;
+
 }

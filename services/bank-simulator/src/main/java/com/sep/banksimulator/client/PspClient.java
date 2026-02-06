@@ -1,22 +1,19 @@
 package com.sep.banksimulator.client;
 
-import com.sep.banksimulator.config.FeignHttpsConfig;
-import com.sep.banksimulator.dto.BankCallbackRequest;
 import com.sep.banksimulator.dto.GenericCallbackRequest;
-import com.sep.banksimulator.dto.PspPaymentResponse;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
-@FeignClient(name = "psp", url = "https://localhost:8081", configuration = FeignHttpsConfig.class)
-public interface PspClient {
+@Component
+@RequiredArgsConstructor
+public class PspClient {
 
-    @GetMapping("/api/payments/{pspPaymentId}")
-    PspPaymentResponse getPayment(@PathVariable Long pspPaymentId);
+    private final RestTemplate restTemplate;
+    private static final String BASE_URL = "https://psp/api/payments";
 
-    @PostMapping("/api/payments/callback")
-    void sendCallback(@RequestBody GenericCallbackRequest request);
-
+    public void sendCallback(GenericCallbackRequest request) {
+        String url = BASE_URL + "/callback";
+        restTemplate.postForObject(url, request, Void.class);
+    }
 }

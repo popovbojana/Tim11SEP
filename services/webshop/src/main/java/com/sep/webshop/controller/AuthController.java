@@ -3,7 +3,7 @@ package com.sep.webshop.controller;
 import com.sep.webshop.dto.auth.AuthResponse;
 import com.sep.webshop.dto.auth.LoginRequest;
 import com.sep.webshop.dto.auth.RegisterRequest;
-import com.sep.webshop.service.AuthService;
+import com.sep.webshop.service.impl.AuthServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final AuthService authService;
+    private final AuthServiceImpl authService;
 
     @PostMapping("/register")
     public ResponseEntity<Void> register(@Valid @RequestBody RegisterRequest request) {

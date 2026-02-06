@@ -12,16 +12,11 @@ import java.util.List;
 public class RentalOfferDTO {
 
     private Long id;
-
     private String title;
-
     private String description;
-
     private VehicleDTO vehicle;
-
     private InsurancePackageDTO insurancePackage;
-
     private List<AdditionalServiceDTO> additionalServices;
-
     private double basePricePerDay;
+
 }

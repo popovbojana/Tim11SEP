@@ -10,7 +10,6 @@ import lombok.*;
 public class InitPaymentResponse {
 
     private Long paymentId;
-
     private String redirectUrl;
 
 }
