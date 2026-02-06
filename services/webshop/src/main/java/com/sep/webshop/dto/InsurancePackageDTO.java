@@ -10,11 +10,8 @@ import lombok.*;
 public class InsurancePackageDTO {
 
     private Long id;
-
     private String name;
-
     private String description;
-
     private double pricePerDay;
 
 }

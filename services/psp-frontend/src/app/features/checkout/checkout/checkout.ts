@@ -3,10 +3,12 @@ import { ActivatedRoute } from '@angular/router';
 import { PaymentsApi } from '../../../core/services/payment-api/payment-api';
 import { Payment } from '../../../shared/models/payment';
 import { MerchantApi } from '../../../core/services/merchant-api/merchant-api';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-checkout',
   standalone: true,
+  imports: [CommonModule],
   templateUrl: './checkout.html',
   styleUrl: './checkout.scss',
 })
@@ -18,8 +20,8 @@ export class Checkout {
   paymentId = signal<number | null>(null);
   payment = signal<Payment | null>(null);
   methods = signal<string[] | null>(null);
-
   error = signal<string | null>(null);
+  processingMethod = signal<string | null>(null);
 
   constructor() {
     this.route.paramMap.subscribe((params) => {
@@ -38,22 +40,16 @@ export class Checkout {
 
   private loadPayment(id: number) {
     this.error.set(null);
-    this.payment.set(null);
-    this.methods.set(null);
-
     this.pspPaymentsApi.getPayment(id).subscribe({
       next: (res) => {
         this.payment.set(res);
-
-        const merchantKey = res.merchantKey;
-        if (!merchantKey) {
-          this.error.set('Missing merchant information for this payment.');
-          return;
+        if (res.merchantKey) {
+          this.loadMerchantMethods(res.merchantKey);
+        } else {
+          this.error.set('Merchant data missing.');
         }
-
-        this.loadMerchantMethods(merchantKey);
       },
-      error: () => this.error.set('Failed to load payment.'),
+      error: () => this.error.set('Failed to load payment details.'),
     });
   }
 
@@ -64,41 +60,19 @@ export class Checkout {
     });
   }
 
-  hasMethod(method: string): boolean {
-    return (this.methods() ?? []).includes(method.toUpperCase());
-  }
-
-  payByCard(): void {
+  onPay(method: string): void {
     const id = this.paymentId();
-    if (!id) return;
+    if (!id || this.processingMethod()) return;
 
     this.error.set(null);
+    this.processingMethod.set(method);
 
-    this.pspPaymentsApi.startCardPayment(id).subscribe({
+    this.pspPaymentsApi.startPayment(id, method).subscribe({
       next: (res) => (window.location.href = res.redirectUrl),
-      error: () => this.error.set('Failed to start card payment.'),
+      error: (err) => {
+        this.error.set(`Service for ${method} is currently unavailable.`);
+        this.processingMethod.set(null);
+      }
     });
-  }
-
-  payByQr(): void {
-    const id = this.paymentId();
-    if (!id) return;
-
-    this.error.set(null);
-
-    this.pspPaymentsApi.startQrPayment(id).subscribe({
-      next: (res) => (
-        window.location.href = res.redirectUrl
-      ),
-      error: () => this.error.set('Failed to start card payment.'),
-    });
-  }
-
-  payByPaypal(): void {
-    alert("paypal coming soon!")
-  }
-
-  payByCrypto(): void {
-    alert("crypto coming soon!")
   }
 }

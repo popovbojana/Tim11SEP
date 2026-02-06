@@ -68,7 +68,8 @@
           },
           "defaultConfiguration": "development",
           "options": {
-            "port": 4300
+            "port": 4300,
+            "ssl": true
         },
         "test": {
           "builder": "@angular/build:unit-test"

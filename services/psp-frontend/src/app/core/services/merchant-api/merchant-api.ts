@@ -1,14 +1,13 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { MerchantCreateRequest, MerchantResponse, PaymentMethod, UpdateMethodsPayload } from '../../../shared/models/merchant';
+import { MerchantCreateRequest, MerchantUpdateRequest, MerchantResponse } from '../../../shared/models/merchant';
 
 @Injectable({ providedIn: 'root' })
 export class MerchantApi {
   private readonly baseUrl = environment.apiBaseUrl;
-
-  constructor(private http: HttpClient) {}
+  private http = inject(HttpClient);
 
   create(payload: MerchantCreateRequest): Observable<MerchantResponse> {
     return this.http.post<MerchantResponse>(`${this.baseUrl}/api/merchants`, payload);
@@ -22,16 +21,15 @@ export class MerchantApi {
     return this.http.get<MerchantResponse[]>(`${this.baseUrl}/api/merchants`);
   }
 
-  getMethods(merchantKey: string): Observable<PaymentMethod[]> {
-    return this.http.get<PaymentMethod[]>(
-      `${this.baseUrl}/api/merchants/${merchantKey}/methods`
-    );
+  update(merchantKey: string, payload: MerchantUpdateRequest): Observable<MerchantResponse> {
+    return this.http.put<MerchantResponse>(`${this.baseUrl}/api/merchants/${merchantKey}`, payload);
   }
 
-  updateMethods(merchantKey: string, payload: UpdateMethodsPayload): Observable<PaymentMethod[]> {
-    return this.http.put<PaymentMethod[]>(
-      `${this.baseUrl}/api/merchants/${merchantKey}/methods`,
-      payload
-    );
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/api/merchants/${id}`);
+  }
+
+  getMethods(merchantKey: string): Observable<string[]> {
+    return this.http.get<string[]>(`${this.baseUrl}/api/merchants/${merchantKey}/methods`);
   }
 }

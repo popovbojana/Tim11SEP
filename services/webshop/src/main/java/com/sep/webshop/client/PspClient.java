@@ -1,6 +1,5 @@
 package com.sep.webshop.client;
 
-import com.sep.webshop.config.PspConfig;
 import com.sep.webshop.dto.payment.InitPaymentRequest;
 import com.sep.webshop.dto.payment.InitPaymentResponse;
 import lombok.RequiredArgsConstructor;
@@ -12,17 +11,10 @@ import org.springframework.web.client.RestTemplate;
 public class PspClient {
 
     private final RestTemplate restTemplate;
-
-    private final PspConfig pspConfig;
+    private static final String BASE_URL = "https://psp/api/payments";
 
     public InitPaymentResponse initPayment(InitPaymentRequest request) {
-        String url = pspConfig.getBaseUrl() + "/api/payments/init";
-
-        return restTemplate.postForObject(
-                url,
-                request,
-                InitPaymentResponse.class
-        );
+        String url = BASE_URL + "/init";
+        return restTemplate.postForObject(url, request, InitPaymentResponse.class);
     }
-
 }

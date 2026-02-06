@@ -67,7 +67,8 @@
           },
           "defaultConfiguration": "development",
           "options": {
-            "port": 4400
+            "port": 4400,
+            "ssl": true
           }
         },
         "test": {

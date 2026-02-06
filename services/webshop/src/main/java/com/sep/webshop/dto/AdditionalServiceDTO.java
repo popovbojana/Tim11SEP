@@ -10,11 +10,8 @@ import lombok.*;
 public class AdditionalServiceDTO {
 
     private Long id;
-
     private String name;
-
     private String description;
-
     private double pricePerDay;
 
 }

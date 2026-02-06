@@ -18,13 +18,8 @@ public class BankPaymentController {
     private final BankPaymentService bankPaymentService;
 
     @PostMapping("/init")
-    public ResponseEntity<InitBankPaymentResponse> init(@Valid @RequestBody InitBankPaymentRequest request) {
-        return new ResponseEntity<>(bankPaymentService.init(request), HttpStatus.OK);
-    }
-
-    @PostMapping("/init/qr")
-    public ResponseEntity<InitBankPaymentResponse> initQr(@Valid @RequestBody InitBankPaymentRequest request) {
-        return new ResponseEntity<>(bankPaymentService.initQr(request), HttpStatus.OK);
+    public ResponseEntity<GenericPaymentResponse> init(@Valid @RequestBody GenericPaymentRequest request) {
+        return new ResponseEntity<>(bankPaymentService.initialize(request), HttpStatus.OK);
     }
 
     @GetMapping("/{id}/qr")

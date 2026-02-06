@@ -46,4 +46,10 @@ public class BankPayment {
     @Column(nullable = false)
     private Instant createdAt;
 
+    @Column
+    private String receiverName;
+
+    @Column
+    private String receiverAccount;
+
 }

@@ -2,7 +2,10 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
-import { BankPaymentApi } from '../../../core/services/bank-payment-api/bank-payment-api';
+import {
+  BankPaymentApi,
+  ExecutePaymentRequest,
+} from '../../../core/services/bank-payment-api/bank-payment-api';
 
 type CardBrand = 'VISA' | 'MASTERCARD' | null;
 
@@ -26,7 +29,7 @@ export class Checkout {
   constructor(
     private route: ActivatedRoute,
     private fb: FormBuilder,
-    private bankPaymentApi: BankPaymentApi
+    private bankPaymentApi: BankPaymentApi,
   ) {
     this.form = this.fb.nonNullable.group({
       cardHolderName: ['', [Validators.required]],
@@ -80,7 +83,11 @@ export class Checkout {
 
     this.loading = true;
 
-    const payload = this.form.getRawValue();
+    const rawValues = this.form.getRawValue();
+    const payload: ExecutePaymentRequest = {
+      ...rawValues,
+      pan: this.onlyDigits(rawValues.pan),
+    };
 
     this.bankPaymentApi.execute(this.bankPaymentId, payload).subscribe({
       next: (res) => {
@@ -93,7 +100,6 @@ export class Checkout {
       },
     });
   }
-
   private onlyDigits(input: string): string {
     return (input ?? '').replace(/\D/g, '');
   }

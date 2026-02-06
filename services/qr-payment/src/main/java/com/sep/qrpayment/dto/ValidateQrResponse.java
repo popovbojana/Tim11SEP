@@ -10,7 +10,6 @@ import lombok.*;
 public class ValidateQrResponse {
 
     private boolean valid;
-
     private String reason;
 
 }

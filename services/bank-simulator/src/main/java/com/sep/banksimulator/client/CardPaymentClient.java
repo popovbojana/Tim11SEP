@@ -11,8 +11,11 @@ import org.springframework.web.client.RestTemplate;
 public class CardPaymentClient {
 
     private final RestTemplate restTemplate;
+    private static final String BASE_URL = "https://card-payment/api/cards";
 
     public AuthorizeCardPaymentResponse authorize(AuthorizeCardPaymentRequest request) {
-        return restTemplate.postForObject("http://localhost:8080/card-payment/api/cards/authorize", request, AuthorizeCardPaymentResponse.class);
+        String url = BASE_URL + "/authorize";
+        return restTemplate.postForObject(url, request, AuthorizeCardPaymentResponse.class);
     }
+
 }

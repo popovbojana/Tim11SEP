@@ -1,0 +1,26 @@
+<nav class="nav">
+  <a class="brand" routerLink="/merchants">
+    <span class="brandAccent">PSP</span> Admin
+  </a>
+
+  @if (isLoggedIn()) {
+    <a class="link" routerLink="/merchants" routerLinkActive="active">
+      Merchants
+    </a>
+    <a class="link" routerLink="/payment-methods" routerLinkActive="active">
+      Payment Methods
+    </a>
+  }
+
+  <span class="spacer"></span>
+
+  @if (!isLoggedIn()) {
+    <a class="link" routerLink="/login" routerLinkActive="active">
+      Login
+    </a>
+  } @else {
+    <button class="link buttonLink" type="button" (click)="logout()">
+      Logout
+    </button>
+  }
+</nav>

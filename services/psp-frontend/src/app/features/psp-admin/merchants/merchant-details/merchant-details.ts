@@ -1,13 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { startWith } from 'rxjs';
 import { MerchantApi } from '../../../../core/services/merchant-api/merchant-api';
-import {
-  MerchantResponse,
-  PaymentMethod,
-  UpdateMethodsPayload,
-} from '../../../../shared/models/merchant';
+import { PaymentMethodApi } from '../../../../core/services/payment-method-api/payment-method-api';
+import { MerchantResponse, MerchantUpdateRequest } from '../../../../shared/models/merchant';
 
 @Component({
   selector: 'app-merchant-details',
@@ -20,33 +19,71 @@ export class MerchantDetails implements OnInit {
   private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);
   private merchantApi = inject(MerchantApi);
+  private paymentMethodApi = inject(PaymentMethodApi);
 
   merchantKey = '';
-
   merchant = signal<MerchantResponse | null>(null);
+  allMethods = signal<string[]>([]);
   errorMessage = signal<string | null>(null);
   successMessage = signal<string | null>(null);
+  saving = signal(false);
 
-  saving = false;
-
-  readonly allMethods: PaymentMethod[] = ['CARD', 'QR', 'PAYPAL', 'CRYPTO'];
+  private httpsPattern = /^https:\/\/.+/;
+  private bankAccountPattern = /^[0-9-]{13,22}$/;
 
   form = this.fb.nonNullable.group({
-    methods: this.fb.nonNullable.control<PaymentMethod[]>([], {
-      validators: [Validators.required],
-    }),
+    fullName: ['', [Validators.required]],
+    email: ['', [Validators.required, Validators.email]],
+    successUrl: ['', [Validators.required, Validators.pattern(this.httpsPattern)]],
+    failedUrl: ['', [Validators.required, Validators.pattern(this.httpsPattern)]],
+    errorUrl: ['', [Validators.required, Validators.pattern(this.httpsPattern)]],
+    serviceName: ['', [Validators.required, Validators.minLength(3)]],
+    bankAccount: ['', [Validators.required, Validators.pattern(this.bankAccountPattern)]],
+    methods: [[] as string[], [Validators.required, Validators.minLength(1)]],
+  });
+
+  formValue = toSignal(this.form.valueChanges.pipe(startWith(this.form.getRawValue())));
+
+  isUnchanged = computed(() => {
+    const initial = this.merchant();
+    const current = this.formValue();
+    
+    if (!initial || !current || !current.methods) return true;
+
+    const currentMethods = current.methods;
+    const initialMethods = initial.activeMethods;
+
+    const methodsMatch = initialMethods.length === currentMethods.length &&
+      [...initialMethods].sort().every((v, i) => v === [...currentMethods].sort()[i]);
+
+    return current.fullName === initial.fullName &&
+           current.email === initial.email &&
+           current.successUrl === initial.successUrl &&
+           current.failedUrl === initial.failedUrl &&
+           current.errorUrl === initial.errorUrl &&
+           current.serviceName === initial.serviceName &&
+           current.bankAccount === initial.bankAccount &&
+           methodsMatch;
   });
 
   ngOnInit(): void {
     const key = this.route.snapshot.paramMap.get('merchantKey');
     if (!key) {
       this.errorMessage.set('Missing merchant key in route.');
-      this.merchant.set({ id: 0, merchantKey: '-', activeMethods: [] });
       return;
     }
-
     this.merchantKey = key;
-    this.load();
+    this.loadAllAvailableMethods();
+  }
+
+  loadAllAvailableMethods(): void {
+    this.paymentMethodApi.getAll().subscribe({
+      next: (methods) => {
+        this.allMethods.set(methods.map(m => m.name));
+        this.load();
+      },
+      error: () => this.errorMessage.set('Failed to load system payment methods.')
+    });
   }
 
   load(): void {
@@ -57,70 +94,59 @@ export class MerchantDetails implements OnInit {
     this.merchantApi.get(this.merchantKey).subscribe({
       next: (res) => {
         this.merchant.set(res);
-
-        const current = (res.activeMethods ?? []) as PaymentMethod[];
-        this.form.controls.methods.setValue(current);
+        this.form.patchValue({
+          fullName: res.fullName,
+          email: res.email,
+          successUrl: res.successUrl,
+          failedUrl: res.failedUrl,
+          errorUrl: res.errorUrl,
+          serviceName: res.serviceName,
+          bankAccount: res.bankAccount,
+          methods: [...res.activeMethods]
+        });
         this.form.markAsPristine();
       },
       error: (err) => {
         this.errorMessage.set(err?.error?.message ?? 'Failed to load merchant.');
-        this.merchant.set({ id: 0, merchantKey: this.merchantKey, activeMethods: [] });
       },
     });
   }
 
-  isSelected(method: PaymentMethod): boolean {
-    return this.form.controls.methods.value.includes(method);
-  }
-
-  toggleMethod(method: PaymentMethod): void {
+  toggleMethod(method: string): void {
     this.successMessage.set(null);
-
     const current = this.form.controls.methods.value;
+    const next = current.includes(method) 
+      ? current.filter(m => m !== method) 
+      : [...current, method];
 
-    if (current.includes(method)) {
-      this.form.controls.methods.setValue(current.filter((m) => m !== method));
-    } else {
-      this.form.controls.methods.setValue([...current, method]);
-    }
-
+    this.form.controls.methods.setValue(next);
     this.form.controls.methods.markAsTouched();
     this.form.markAsDirty();
   }
 
   save(): void {
+    if (this.form.invalid || this.isUnchanged()) return;
+
     this.errorMessage.set(null);
     this.successMessage.set(null);
+    this.saving.set(true);
 
-    const selected = this.form.controls.methods.value;
+    const rawValues = this.form.getRawValue();
+    const payload: MerchantUpdateRequest = {
+      ...rawValues,
+      serviceName: rawValues.serviceName.toUpperCase().trim()
+    };
 
-    if (!selected || selected.length === 0) {
-      this.form.controls.methods.markAsTouched();
-      this.errorMessage.set('Select at least one payment method.');
-      return;
-    }
-
-    this.saving = true;
-
-    const payload: UpdateMethodsPayload = { methods: selected };
-
-    this.merchantApi.updateMethods(this.merchantKey, payload).subscribe({
+    this.merchantApi.update(this.merchantKey, payload).subscribe({
       next: (updated) => {
-        this.saving = false;
-        this.successMessage.set('Payment methods saved.');
-
-        const nextMethods = (updated ?? []) as PaymentMethod[];
-        this.form.controls.methods.setValue(nextMethods);
+        this.saving.set(false);
+        this.successMessage.set('Merchant updated successfully.');
+        this.merchant.set(updated);
         this.form.markAsPristine();
-
-        const currentMerchant = this.merchant();
-        if (currentMerchant) {
-          this.merchant.set({ ...currentMerchant, activeMethods: nextMethods as any });
-        }
       },
       error: (err) => {
-        this.saving = false;
-        this.errorMessage.set(err?.error?.message ?? 'Failed to save payment methods.');
+        this.saving.set(false);
+        this.errorMessage.set(err?.error?.message ?? 'Failed to update merchant.');
       },
     });
   }
