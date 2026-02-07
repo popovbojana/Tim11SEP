@@ -1,4 +1,4 @@
-package com.sep.qrpayment.service;
+package com.sep.qrpayment.service.impl;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
@@ -9,6 +9,7 @@ import com.sep.qrpayment.dto.GenerateQrResponse;
 import com.sep.qrpayment.dto.ValidateQrRequest;
 import com.sep.qrpayment.dto.ValidateQrResponse;
 import com.sep.qrpayment.exception.BadRequestException;
+import com.sep.qrpayment.service.QrCodeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +25,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-public class QrCodeServiceImpl implements QrCodeService{
+public class QrCodeServiceImpl implements QrCodeService {
 
     @Override
     public GenerateQrResponse generate(GenerateQrRequest request) {
@@ -39,6 +40,7 @@ public class QrCodeServiceImpl implements QrCodeService{
 
     @Override
     public ValidateQrResponse validate(ValidateQrRequest request) {
+
         if (request.getQrText() == null || request.getQrText().isBlank()) {
             return ValidateQrResponse.builder().valid(false).reason("Empty QR").build();
         }
@@ -60,9 +62,15 @@ public class QrCodeServiceImpl implements QrCodeService{
         String s = parsed.get("S");
         String ro = parsed.get("RO");
 
-        if (!"PR".equals(k)) return ValidateQrResponse.builder().valid(false).reason("K mismatch").build();
-        if (!"01".equals(v)) return ValidateQrResponse.builder().valid(false).reason("V mismatch").build();
-        if (!"1".equals(c)) return ValidateQrResponse.builder().valid(false).reason("C mismatch").build();
+        if (!"PR".equals(k)) {
+            return ValidateQrResponse.builder().valid(false).reason("K mismatch").build();
+        }
+        if (!"01".equals(v)) {
+            return ValidateQrResponse.builder().valid(false).reason("V mismatch").build();
+        }
+        if (!"1".equals(c)) {
+            return ValidateQrResponse.builder().valid(false).reason("C mismatch").build();
+        }
 
         if (r == null || r.isBlank()) return ValidateQrResponse.builder().valid(false).reason("Missing R").build();
         if (n == null || n.isBlank()) return ValidateQrResponse.builder().valid(false).reason("Missing N").build();
@@ -72,11 +80,11 @@ public class QrCodeServiceImpl implements QrCodeService{
             return ValidateQrResponse.builder().valid(false).reason("Invalid R").build();
         }
 
-        if (!r.equals(request.getReceiverAccount())) {
+        if (!r.equals(normalizeAccount(request.getReceiverAccount()))) {
             return ValidateQrResponse.builder().valid(false).reason("Receiver account mismatch").build();
         }
 
-        if (!n.equals(request.getReceiverName())) {
+        if (!n.equals(normalizeText(request.getReceiverName()))) {
             return ValidateQrResponse.builder().valid(false).reason("Receiver name mismatch").build();
         }
 
@@ -191,5 +199,4 @@ public class QrCodeServiceImpl implements QrCodeService{
     private boolean isDigitsOnly(String s) {
         return s != null && !s.isBlank() && s.matches("\\d+");
     }
-
 }

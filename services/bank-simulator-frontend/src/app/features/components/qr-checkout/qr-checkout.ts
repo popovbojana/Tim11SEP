@@ -68,7 +68,6 @@ export class QrCheckout {
     this.qrApi.confirm(id, qr).subscribe({
       next: (res) => {
         this.confirming.set(false);
-        console.log(res.redirectUrl);
         window.location.href = res.redirectUrl;
       },
       error: () => {

@@ -47,7 +47,7 @@ public class Payment {
     private String errorUrl;
 
     @Column(name = "external_payment_id")
-    private Long externalPaymentId;
+    private String externalPaymentId;
 
     @Column(name = "external_redirect_url", length = 2048)
     private String externalRedirectUrl;

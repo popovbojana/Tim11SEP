@@ -34,7 +34,7 @@ public class PaymentController {
     }
 
     @GetMapping("/finalize/{externalPaymentId}")
-    public ResponseEntity<Void> finalize(@PathVariable Long externalPaymentId) {
+    public ResponseEntity<Void> finalize(@PathVariable String externalPaymentId) {
         return ResponseEntity.status(302).headers(paymentService.finalize(externalPaymentId)).build();
     }
 

@@ -84,7 +84,9 @@ public class PaymentServiceImpl implements PaymentService {
                 .metadata(Map.of(
                         "selectedMethod", methodName,
                         "receiverName", merchant.getFullName(),
-                        "receiverAccount", merchant.getBankAccount()
+                        "receiverAccount", merchant.getBankAccount(),
+                        "merchantOrderId", payment.getMerchantOrderId(),
+                        "merchantKey", payment.getMerchantKey()
                 ))
                 .build();
 
@@ -151,7 +153,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional
-    public HttpHeaders finalize(Long externalPaymentId) {
+    public HttpHeaders finalize(String externalPaymentId) {
         Payment payment = paymentRepository.findByExternalPaymentId(externalPaymentId)
                 .orElseThrow(() -> new NotFoundException("Payment not found."));
 
