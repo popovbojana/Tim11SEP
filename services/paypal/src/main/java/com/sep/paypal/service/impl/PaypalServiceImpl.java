@@ -126,7 +126,7 @@ public class PaypalServiceImpl implements PaypalService {
                 paypalTransactionRepository.save(transaction);
 
                 notifyPsp(transaction);
-                return PSP_FINALIZE_URL + transaction.getPaypalOrderId();
+                return PSP_FINALIZE_URL + transaction.getPspPaymentId();
             }
             return PSP_ERROR_URL;
         } catch (Exception e) {
