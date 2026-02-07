@@ -33,9 +33,9 @@ public class PaymentController {
         return new ResponseEntity<>(paymentService.startPayment(id, methodName), HttpStatus.OK);
     }
 
-    @GetMapping("/finalize/{externalPaymentId}")
-    public ResponseEntity<Void> finalize(@PathVariable String externalPaymentId) {
-        return ResponseEntity.status(302).headers(paymentService.finalize(externalPaymentId)).build();
+    @GetMapping("/finalize/{id}")
+    public ResponseEntity<Void> finalize(@PathVariable Long id) {
+        return ResponseEntity.status(302).headers(paymentService.finalize(id)).build();
     }
 
     @PostMapping("/callback")

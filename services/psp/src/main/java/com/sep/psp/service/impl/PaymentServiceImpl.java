@@ -153,9 +153,9 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional
-    public HttpHeaders finalize(String externalPaymentId) {
-        Payment payment = paymentRepository.findByExternalPaymentId(externalPaymentId)
-                .orElseThrow(() -> new NotFoundException("Payment not found."));
+    public HttpHeaders finalize(Long id) {
+        Payment payment = paymentRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Payment with id: " + id + " not found."));
 
         waitForFinalStatus(payment.getId());
 

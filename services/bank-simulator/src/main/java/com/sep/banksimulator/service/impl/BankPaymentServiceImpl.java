@@ -121,7 +121,7 @@ public class BankPaymentServiceImpl implements BankPaymentService {
             finalizePayment(payment, BankPaymentStatus.SUCCESS, UUID.randomUUID().toString(), Instant.now());
         }
 
-        return PSP_FINALIZE_URL + payment.getId().toString();
+        return PSP_FINALIZE_URL + payment.getPspPaymentId();
     }
 
     @Override
@@ -132,7 +132,7 @@ public class BankPaymentServiceImpl implements BankPaymentService {
 
         if (isExpired(payment)) {
             finalizePayment(payment, BankPaymentStatus.FAILED, null, null);
-            return PSP_FINALIZE_URL + payment.getId().toString();
+            return PSP_FINALIZE_URL + payment.getPspPaymentId();
         }
 
         payment.setStatus(BankPaymentStatus.IN_PROGRESS);
@@ -160,7 +160,7 @@ public class BankPaymentServiceImpl implements BankPaymentService {
             finalizePayment(payment, BankPaymentStatus.ERROR, null, null);
         }
 
-        return PSP_FINALIZE_URL + payment.getId().toString();
+        return PSP_FINALIZE_URL + payment.getPspPaymentId();
     }
 
     private void finalizePayment(BankPayment payment, BankPaymentStatus status, String gid, Instant timestamp) {
