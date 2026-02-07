@@ -1,4 +1,4 @@
-package com.sep.banksimulator.dto;
+package com.sep.paypal.dto;
 
 import lombok.*;
 

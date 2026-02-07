@@ -58,7 +58,7 @@ public class BankPaymentServiceImpl implements BankPaymentService {
         }
 
         return GenericPaymentResponse.builder()
-                .externalPaymentId(saved.getId())
+                .externalPaymentId(saved.getId().toString())
                 .redirectUrl(redirectUrl)
                 .build();
     }
@@ -121,7 +121,7 @@ public class BankPaymentServiceImpl implements BankPaymentService {
             finalizePayment(payment, BankPaymentStatus.SUCCESS, UUID.randomUUID().toString(), Instant.now());
         }
 
-        return PSP_FINALIZE_URL + payment.getId();
+        return PSP_FINALIZE_URL + payment.getId().toString();
     }
 
     @Override
@@ -132,7 +132,7 @@ public class BankPaymentServiceImpl implements BankPaymentService {
 
         if (isExpired(payment)) {
             finalizePayment(payment, BankPaymentStatus.FAILED, null, null);
-            return PSP_FINALIZE_URL + payment.getId();
+            return PSP_FINALIZE_URL + payment.getId().toString();
         }
 
         payment.setStatus(BankPaymentStatus.IN_PROGRESS);
@@ -160,7 +160,7 @@ public class BankPaymentServiceImpl implements BankPaymentService {
             finalizePayment(payment, BankPaymentStatus.ERROR, null, null);
         }
 
-        return PSP_FINALIZE_URL + payment.getId();
+        return PSP_FINALIZE_URL + payment.getId().toString();
     }
 
     private void finalizePayment(BankPayment payment, BankPaymentStatus status, String gid, Instant timestamp) {
@@ -171,7 +171,7 @@ public class BankPaymentServiceImpl implements BankPaymentService {
 
         GenericCallbackRequest callback = GenericCallbackRequest.builder()
                 .pspPaymentId(payment.getPspPaymentId())
-                .externalPaymentId(payment.getId())
+                .externalPaymentId(payment.getId().toString())
                 .status(status.name())
                 .globalTransactionId(gid)
                 .stan(payment.getStan())

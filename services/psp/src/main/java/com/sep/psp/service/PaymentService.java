@@ -9,6 +9,6 @@ public interface PaymentService {
     PaymentResponse getPayment(Long id);
     StartPaymentResponse startPayment(Long paymentId, String methodName);
     void handleCallback(GenericCallbackRequest request);
-    HttpHeaders finalize(Long externalPaymentId);
+    HttpHeaders finalize(String externalPaymentId);
 
 }

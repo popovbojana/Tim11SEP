@@ -13,7 +13,7 @@ public class GenericCallbackRequest {
 
     private Long pspPaymentId;
     private String merchantOrderId;
-    private Long externalPaymentId;
+    private String externalPaymentId;
     private String status;
     private String globalTransactionId;
     private String stan;

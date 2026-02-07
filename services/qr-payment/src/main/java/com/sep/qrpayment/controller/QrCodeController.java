@@ -4,7 +4,7 @@ import com.sep.qrpayment.dto.GenerateQrRequest;
 import com.sep.qrpayment.dto.GenerateQrResponse;
 import com.sep.qrpayment.dto.ValidateQrRequest;
 import com.sep.qrpayment.dto.ValidateQrResponse;
-import com.sep.qrpayment.service.QrCodeServiceImpl;
+import com.sep.qrpayment.service.impl.QrCodeServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
