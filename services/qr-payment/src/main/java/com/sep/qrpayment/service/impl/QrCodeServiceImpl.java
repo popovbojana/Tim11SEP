@@ -11,6 +11,7 @@ import com.sep.qrpayment.dto.ValidateQrResponse;
 import com.sep.qrpayment.exception.BadRequestException;
 import com.sep.qrpayment.service.QrCodeService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
@@ -23,15 +24,20 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class QrCodeServiceImpl implements QrCodeService {
 
     @Override
     public GenerateQrResponse generate(GenerateQrRequest request) {
+        log.info("📨 Generating QR code — receiver: {}, amount: {} {}", request.getReceiverName(), request.getAmount(), request.getCurrency());
+
         String qrText = buildIpsPayload(request);
-        System.out.println("DEBUG - IPS QR STRING: " + qrText);
+        log.info("⚙️ IPS payload built: {}", qrText);
+
         String base64 = generatePngBase64(qrText, 260, 260);
+        log.info("✅ QR image generated (260x260)");
 
         return GenerateQrResponse.builder()
                 .qrText(qrText)
@@ -41,14 +47,18 @@ public class QrCodeServiceImpl implements QrCodeService {
 
     @Override
     public ValidateQrResponse validate(ValidateQrRequest request) {
+        log.info("🔍 Validating QR code — receiver: {}, amount: {} {}", request.getReceiverName(), request.getAmount(), request.getCurrency());
+
         if (request.getCreatedAt() != null) {
             java.time.Duration age = java.time.Duration.between(request.getCreatedAt(), java.time.Instant.now());
             if (age.toMinutes() > 15) {
+                log.warn("❌ QR code expired — age: {} minutes", age.toMinutes());
                 return ValidateQrResponse.builder().valid(false).reason("QR code expired").build();
             }
         }
 
         if (request.getQrText() == null || request.getQrText().isBlank()) {
+            log.warn("❌ Empty QR text");
             return ValidateQrResponse.builder().valid(false).reason("Empty QR").build();
         }
 
@@ -56,6 +66,7 @@ public class QrCodeServiceImpl implements QrCodeService {
         try {
             parsed = parseIpsPayload(request.getQrText());
         } catch (Exception e) {
+            log.warn("❌ Invalid IPS format: {}", e.getMessage());
             return ValidateQrResponse.builder().valid(false).reason("Invalid IPS format").build();
         }
 
@@ -70,54 +81,65 @@ public class QrCodeServiceImpl implements QrCodeService {
         String ro = parsed.get("RO");
 
         if (!"PR".equals(k)) {
+            log.warn("❌ Validation failed — K mismatch: {}", k);
             return ValidateQrResponse.builder().valid(false).reason("K mismatch").build();
         }
         if (!"01".equals(v)) {
+            log.warn("❌ Validation failed — V mismatch: {}", v);
             return ValidateQrResponse.builder().valid(false).reason("V mismatch").build();
         }
         if (!"1".equals(c)) {
+            log.warn("❌ Validation failed — C mismatch: {}", c);
             return ValidateQrResponse.builder().valid(false).reason("C mismatch").build();
         }
 
-        if (r == null || r.isBlank()) return ValidateQrResponse.builder().valid(false).reason("Missing R").build();
-        if (n == null || n.isBlank()) return ValidateQrResponse.builder().valid(false).reason("Missing N").build();
-        if (i == null || i.isBlank()) return ValidateQrResponse.builder().valid(false).reason("Missing I").build();
+        if (r == null || r.isBlank()) { log.warn("❌ Missing R tag"); return ValidateQrResponse.builder().valid(false).reason("Missing R").build(); }
+        if (n == null || n.isBlank()) { log.warn("❌ Missing N tag"); return ValidateQrResponse.builder().valid(false).reason("Missing N").build(); }
+        if (i == null || i.isBlank()) { log.warn("❌ Missing I tag"); return ValidateQrResponse.builder().valid(false).reason("Missing I").build(); }
 
         if (!isDigitsOnly(r) || r.length() != 18) {
+            log.warn("❌ Invalid R (receiver account): {}", r);
             return ValidateQrResponse.builder().valid(false).reason("Invalid R").build();
         }
 
         if (!r.equals(normalizeAccount(request.getReceiverAccount()))) {
+            log.warn("❌ Receiver account mismatch — QR: {}, expected: {}", r, normalizeAccount(request.getReceiverAccount()));
             return ValidateQrResponse.builder().valid(false).reason("Receiver account mismatch").build();
         }
 
         if (!n.equals(normalizeText(request.getReceiverName()))) {
+            log.warn("❌ Receiver name mismatch — QR: '{}', expected: '{}'", n, normalizeText(request.getReceiverName()));
             return ValidateQrResponse.builder().valid(false).reason("Receiver name mismatch").build();
         }
 
         String expectedI = buildTagI(request.getCurrency(), request.getAmount());
         if (!expectedI.equals(i)) {
+            log.warn("❌ Amount/currency mismatch — QR: '{}', expected: '{}'", i, expectedI);
             return ValidateQrResponse.builder().valid(false).reason("Amount/currency mismatch").build();
         }
 
         if (request.getPaymentCode() != null && !request.getPaymentCode().isBlank()) {
             if (!request.getPaymentCode().equals(sf)) {
+                log.warn("❌ SF mismatch — QR: '{}', expected: '{}'", sf, request.getPaymentCode());
                 return ValidateQrResponse.builder().valid(false).reason("SF mismatch").build();
             }
         }
 
         if (request.getPurpose() != null && !request.getPurpose().isBlank()) {
             if (!request.getPurpose().equals(s)) {
+                log.warn("❌ S mismatch — QR: '{}', expected: '{}'", s, request.getPurpose());
                 return ValidateQrResponse.builder().valid(false).reason("S mismatch").build();
             }
         }
 
         if (request.getReferenceNumber() != null && !request.getReferenceNumber().isBlank()) {
             if (!request.getReferenceNumber().equals(ro)) {
+                log.warn("❌ RO mismatch — QR: '{}', expected: '{}'", ro, request.getReferenceNumber());
                 return ValidateQrResponse.builder().valid(false).reason("RO mismatch").build();
             }
         }
 
+        log.info("✅ QR validation passed");
         return ValidateQrResponse.builder().valid(true).reason(null).build();
     }
 
@@ -205,6 +227,7 @@ public class QrCodeServiceImpl implements QrCodeService {
             ImageIO.write(image, "png", baos);
             return Base64.getEncoder().encodeToString(baos.toByteArray());
         } catch (WriterException | java.io.IOException e) {
+            log.error("❌ Failed to generate QR image: {}", e.getMessage(), e);
             throw new BadRequestException("Failed to generate QR image", e);
         }
     }
