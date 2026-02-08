@@ -1,5 +1,4 @@
-export type PaymentStatus = 'CREATED' | 'IN_PROGRESS' | 'SUCCESS' | 'FAILED' | 'CANCELED' | 'CONFIRMED' | 'ERROR';
-
+export type PaymentStatus = 'CREATED' | 'IN_PROGRESS' | 'SUCCESS' | 'FAILED' | 'ERROR';
 
 export type Payment = {
   id: number;

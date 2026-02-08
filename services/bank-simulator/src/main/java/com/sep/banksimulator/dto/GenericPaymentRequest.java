@@ -1,6 +1,8 @@
 package com.sep.banksimulator.dto;
 
 import lombok.*;
+
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Map;
 
@@ -12,7 +14,7 @@ import java.util.Map;
 public class GenericPaymentRequest {
 
     private Long pspPaymentId;
-    private Double amount;
+    private BigDecimal amount;
     private String currency;
     private String stan;
     private Instant pspTimestamp;

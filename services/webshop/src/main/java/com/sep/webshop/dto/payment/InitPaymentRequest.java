@@ -2,6 +2,8 @@ package com.sep.webshop.dto.payment;
 
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -11,10 +13,8 @@ public class InitPaymentRequest {
 
     private String merchantKey;
     private String merchantOrderId;
-    private double amount;
+    private Long reservationId;
+    private BigDecimal amount;
     private String currency;
-    private String successUrl;
-    private String failedUrl;
-    private String errorUrl;
 
 }

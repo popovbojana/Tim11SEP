@@ -19,7 +19,6 @@ export interface MerchantResponse {
 
 export interface MerchantCreateRequest {
   merchantKey: string;
-  merchantPassword: string;
   fullName: string;
   email: string;
   successUrl: string;

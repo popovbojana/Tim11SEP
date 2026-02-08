@@ -7,5 +7,6 @@ public interface PaypalService {
 
     GenericPaymentResponse createOrder(GenericPaymentRequest genericRequest);
     String captureOrder(String paypalOrderId);
+    String cancelOrder(String paypalOrderId);
 
 }

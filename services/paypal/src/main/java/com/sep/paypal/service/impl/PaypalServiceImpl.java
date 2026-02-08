@@ -5,6 +5,7 @@ import com.sep.paypal.entity.PaypalTransaction;
 import com.sep.paypal.repository.PaypalTransactionRepository;
 import com.sep.paypal.service.PaypalAuthService;
 import com.sep.paypal.service.PaypalService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class PaypalServiceImpl implements PaypalService {
 
@@ -23,7 +25,6 @@ public class PaypalServiceImpl implements PaypalService {
     private final PaypalTransactionRepository paypalTransactionRepository;
 
     private static final String PSP_FINALIZE_URL = "https://localhost:8080/psp/api/payments/finalize/";
-    private static final String PSP_ERROR_URL = "https://localhost:8080/psp/api/payments/error";
 
     public PaypalServiceImpl(PaypalAuthService paypalAuthService,
                              @Qualifier("externalRestTemplate") RestTemplate externalRestTemplate,
@@ -44,8 +45,8 @@ public class PaypalServiceImpl implements PaypalService {
 
         PaypalOrderRequest.Amount orderAmount = new PaypalOrderRequest.Amount();
         String currency = genericRequest.getCurrency();
-        if (currency.equals("€")) currency = "EUR";
-        else if (currency.equals("$")) currency = "USD";
+        if ("€".equals(currency)) currency = "EUR";
+        else if ("$".equals(currency)) currency = "USD";
 
         orderAmount.setCurrency_code(currency);
         orderAmount.setValue(String.format("%.2f", genericRequest.getAmount()).replace(",", "."));
@@ -56,7 +57,8 @@ public class PaypalServiceImpl implements PaypalService {
 
         PaypalOrderRequest.ApplicationContext context = new PaypalOrderRequest.ApplicationContext();
         context.setReturn_url("https://localhost:8086/api/payments/confirm");
-        context.setCancel_url("https://localhost:4200/payment/cancel");
+        // FIKS: Sada gadjamo nas cancel endpoint
+        context.setCancel_url("https://localhost:8086/api/payments/cancel");
         request.setApplication_context(context);
 
         HttpHeaders headers = new HttpHeaders();
@@ -72,14 +74,13 @@ public class PaypalServiceImpl implements PaypalService {
         );
 
         if (response != null) {
-            Map<String, String> metadata = genericRequest.getMetadata();
-
             PaypalTransaction transaction = PaypalTransaction.builder()
                     .pspPaymentId(genericRequest.getPspPaymentId())
                     .paypalOrderId(response.getId())
                     .status("CREATED")
-                    .merchantOrderId(metadata.get("merchantOrderId"))
-                    .merchantKey(metadata.get("merchantKey"))
+                    .amount(genericRequest.getAmount())
+                    .merchantOrderId(genericRequest.getMetadata().get("merchantOrderId"))
+                    .merchantKey(genericRequest.getMetadata().get("merchantKey"))
                     .currency(currency)
                     .createdAt(Instant.now())
                     .build();
@@ -97,48 +98,62 @@ public class PaypalServiceImpl implements PaypalService {
                     .externalPaymentId(response.getId())
                     .build();
         }
-
         throw new RuntimeException("PayPal order creation failed");
     }
 
     @Override
     public String captureOrder(String paypalOrderId) {
+        PaypalTransaction transaction = paypalTransactionRepository.findByPaypalOrderId(paypalOrderId)
+                .orElseThrow(() -> new RuntimeException("Transaction not found"));
         try {
             String token = paypalAuthService.getAccessToken();
-
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setBearerAuth(token);
 
-            HttpEntity<String> entity = new HttpEntity<>("{}", headers);
-
             ResponseEntity<Map> response = externalRestTemplate.postForEntity(
                     "https://api-m.sandbox.paypal.com/v2/checkout/orders/" + paypalOrderId + "/capture",
-                    entity,
+                    new HttpEntity<>("{}", headers),
                     Map.class
             );
 
             if (response.getStatusCode().is2xxSuccessful()) {
-                PaypalTransaction transaction = paypalTransactionRepository.findByPaypalOrderId(paypalOrderId)
-                        .orElseThrow(() -> new RuntimeException("Transaction not found"));
-
-                transaction.setStatus("COMPLETED");
+                transaction.setStatus("SUCCESS");
                 paypalTransactionRepository.save(transaction);
-
-                notifyPsp(transaction);
-                return PSP_FINALIZE_URL + transaction.getPspPaymentId();
+                notifyPsp(transaction, "SUCCESS");
+            } else {
+                transaction.setStatus("FAILED");
+                paypalTransactionRepository.save(transaction);
+                notifyPsp(transaction, "FAILED");
             }
-            return PSP_ERROR_URL;
         } catch (Exception e) {
-            return PSP_ERROR_URL;
+            log.error("PayPal capture error: {}", e.getMessage());
+            transaction.setStatus("ERROR");
+            paypalTransactionRepository.save(transaction);
+            notifyPsp(transaction, "FAILED");
         }
+        return PSP_FINALIZE_URL + transaction.getPspPaymentId();
     }
 
-    private void notifyPsp(PaypalTransaction transaction) {
+    @Override
+    public String cancelOrder(String paypalOrderId) {
+        PaypalTransaction transaction = paypalTransactionRepository.findByPaypalOrderId(paypalOrderId)
+                .orElseThrow(() -> new RuntimeException("Transaction not found"));
+
+        transaction.setStatus("CANCELED");
+        paypalTransactionRepository.save(transaction);
+
+        notifyPsp(transaction, "CANCELED");
+
+        return PSP_FINALIZE_URL + transaction.getPspPaymentId();
+    }
+
+    private void notifyPsp(PaypalTransaction transaction, String status) {
         GenericCallbackRequest callback = GenericCallbackRequest.builder()
                 .pspPaymentId(transaction.getPspPaymentId())
                 .merchantOrderId(transaction.getMerchantOrderId())
-                .status("SUCCESS")
+                .amount(transaction.getAmount())
+                .status(status)
                 .externalPaymentId(transaction.getPaypalOrderId())
                 .globalTransactionId(transaction.getPaypalOrderId())
                 .stan(transaction.getPaypalOrderId())
@@ -147,6 +162,10 @@ public class PaypalServiceImpl implements PaypalService {
                 .pspTimestamp(transaction.getCreatedAt())
                 .build();
 
-        loadBalancedRestTemplate.postForObject("https://PSP/api/payments/callback", callback, Void.class);
+        try {
+            loadBalancedRestTemplate.postForObject("https://PSP/api/payments/callback", callback, Void.class);
+        } catch (Exception e) {
+            log.error("Failed to notify PSP: {}", e.getMessage());
+        }
     }
 }

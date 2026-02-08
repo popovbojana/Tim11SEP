@@ -29,7 +29,6 @@ export class MerchantCreate implements OnInit {
 
   form = this.fb.nonNullable.group({
     merchantKey: ['', [Validators.required, Validators.minLength(3), Validators.pattern(/^[A-Za-z0-9._-]+$/)]],
-    merchantPassword: ['', [Validators.required, Validators.minLength(8)]],
     fullName: ['', [Validators.required]],
     email: ['', [Validators.required, Validators.email]],
     successUrl: ['', [Validators.required, Validators.pattern(this.httpsPattern)]],

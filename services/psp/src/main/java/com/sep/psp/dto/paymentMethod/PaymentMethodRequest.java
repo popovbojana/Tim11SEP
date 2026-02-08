@@ -1,5 +1,6 @@
 package com.sep.psp.dto.paymentMethod;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 @Getter
@@ -9,7 +10,10 @@ import lombok.*;
 @Builder
 public class PaymentMethodRequest {
 
+    @NotBlank
     private String name;
+
+    @NotBlank
     private String serviceName;
 
 }

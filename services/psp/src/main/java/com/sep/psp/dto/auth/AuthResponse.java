@@ -11,4 +11,8 @@ public class AuthResponse {
 
     private String token;
 
+    private boolean mfaRequired;
+
+    private String email;
+
 }

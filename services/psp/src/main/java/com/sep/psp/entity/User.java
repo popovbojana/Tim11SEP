@@ -3,6 +3,8 @@ package com.sep.psp.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -28,5 +30,11 @@ public class User {
 
     @Column(nullable = false)
     private boolean active;
+
+    @Column
+    private String mfaCode;
+
+    @Column
+    private Instant mfaExpiry;
 
 }

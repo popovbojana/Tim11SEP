@@ -3,6 +3,7 @@ package com.sep.webshop.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 
@@ -40,17 +41,24 @@ public class RentalReservation {
     @Builder.Default
     private Instant createdAt = Instant.now();
 
-    private double totalPrice;
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal totalPrice;
 
-    @Enumerated(EnumType.STRING)
-    private PaymentMethod paymentMethod;
+    @Column(nullable = false, length = 3)
+    private String currency;
 
+    @Column
+    private String paymentMethod;
+
+    @Column
     private String paymentReference;
 
+    @Column
     private Instant paidAt;
 
     @Column(nullable = false, unique = true)
     private String merchantOrderId;
 
+    @Column
     private Long pspPaymentId;
 }

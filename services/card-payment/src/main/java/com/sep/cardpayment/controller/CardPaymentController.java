@@ -2,7 +2,7 @@ package com.sep.cardpayment.controller;
 
 import com.sep.cardpayment.dto.AuthorizeCardPaymentRequest;
 import com.sep.cardpayment.dto.AuthorizeCardPaymentResponse;
-import com.sep.cardpayment.service.CardAuthorizationServiceImpl;
+import com.sep.cardpayment.service.CardAuthorizationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class CardPaymentController {
 
-    private final CardAuthorizationServiceImpl cardAuthorizationService;
+    private final CardAuthorizationService cardAuthorizationService;
 
     @PostMapping("/authorize")
     public ResponseEntity<AuthorizeCardPaymentResponse> authorize(@Valid @RequestBody AuthorizeCardPaymentRequest request) {

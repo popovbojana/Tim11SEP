@@ -4,6 +4,7 @@ import com.sep.crypto.dto.*;
 import com.sep.crypto.entity.CryptoTransaction;
 import com.sep.crypto.repository.CryptoTransactionRepository;
 import com.sep.crypto.service.CoinGateService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -13,6 +14,7 @@ import org.springframework.web.client.RestTemplate;
 import java.time.Instant;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class CoinGateServiceImpl implements CoinGateService {
 
@@ -43,7 +45,7 @@ public class CoinGateServiceImpl implements CoinGateService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiToken);
 
-        String currency = request.getCurrency().equals("€") ? "EUR" : request.getCurrency();
+        String currency = "€".equals(request.getCurrency()) ? "EUR" : request.getCurrency();
 
         CoinGateOrderRequest cgRequest = CoinGateOrderRequest.builder()
                 .orderId(request.getPspPaymentId().toString())
@@ -53,7 +55,7 @@ public class CoinGateServiceImpl implements CoinGateService {
                 .title("Reservation #" + request.getPspPaymentId())
                 .callbackUrl(appCallbackUrl)
                 .successUrl("https://localhost:8080/psp/api/payments/finalize/" + request.getPspPaymentId())
-                .cancelUrl("https://localhost:4200/payment/cancel")
+                .cancelUrl("https://localhost:8080/psp/api/payments/finalize/" + request.getPspPaymentId())
                 .build();
 
         HttpEntity<CoinGateOrderRequest> entity = new HttpEntity<>(cgRequest, headers);
@@ -88,8 +90,8 @@ public class CoinGateServiceImpl implements CoinGateService {
                         .build();
             }
         } catch (Exception e) {
-            System.err.println("Greska pri pozivu CoinGate-a: " + e.getMessage());
-            throw e;
+            log.error("CoinGate order creation failed: {}", e.getMessage());
+            throw new RuntimeException("CoinGate communication error");
         }
 
         throw new RuntimeException("CoinGate order creation failed");
@@ -100,17 +102,25 @@ public class CoinGateServiceImpl implements CoinGateService {
         CryptoTransaction transaction = cryptoTransactionRepository.findByCoingateOrderId(callback.getId().toString())
                 .orElseThrow(() -> new RuntimeException("Transaction not found"));
 
-        if (!"paid".equalsIgnoreCase(callback.getStatus())) {
+        String cgStatus = callback.getStatus();
+        String pspStatus = "FAILED";
+
+        if ("paid".equalsIgnoreCase(cgStatus)) {
+            pspStatus = "SUCCESS";
+            transaction.setStatus("PAID");
+        } else if ("expired".equalsIgnoreCase(cgStatus) || "canceled".equalsIgnoreCase(cgStatus) || "invalid".equalsIgnoreCase(cgStatus)) {
+            transaction.setStatus("FAILED");
+        } else {
             return;
         }
 
-        transaction.setStatus("PAID");
         cryptoTransactionRepository.save(transaction);
 
         GenericCallbackRequest callbackRequest = GenericCallbackRequest.builder()
                 .pspPaymentId(transaction.getPspPaymentId())
                 .merchantOrderId(transaction.getMerchantOrderId())
-                .status("SUCCESS")
+                .amount(transaction.getAmount())
+                .status(pspStatus)
                 .externalPaymentId(transaction.getCoingateOrderId())
                 .globalTransactionId(transaction.getCoingateOrderId())
                 .stan(transaction.getCoingateOrderId())
@@ -122,7 +132,7 @@ public class CoinGateServiceImpl implements CoinGateService {
         try {
             loadBalancedRestTemplate.postForObject("https://PSP/api/payments/callback", callbackRequest, Void.class);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to notify PSP: {}", e.getMessage());
         }
     }
 }

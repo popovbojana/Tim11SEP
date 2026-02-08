@@ -11,4 +11,7 @@ public class PspConfig {
     @Value("${psp.merchant-key}")
     private String merchantKey;
 
+    @Value("${psp.merchant-password}")
+    private String merchantPassword;
+
 }

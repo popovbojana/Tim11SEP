@@ -4,6 +4,8 @@ import com.sep.psp.entity.PaymentStatus;
 import jakarta.persistence.Column;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -11,7 +13,7 @@ import lombok.*;
 public class PaymentResponse {
 
     private Long id;
-    private double amount;
+    private BigDecimal amount;
     private String currency;
     private PaymentStatus status;
     private String merchantKey;
