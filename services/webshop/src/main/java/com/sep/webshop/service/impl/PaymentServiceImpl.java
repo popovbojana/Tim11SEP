@@ -9,10 +9,12 @@ import com.sep.webshop.dto.payment.InitPaymentResponse;
 import com.sep.webshop.service.PaymentService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
@@ -24,11 +26,14 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional
     public InitPaymentResponse initPayment(CreateReservationRequest reservationRequest, String customerEmail) {
+        log.info("📨 Initiating payment for customer: {}", customerEmail);
 
         String merchantOrderId = UUID.randomUUID().toString();
+        log.info("🔑 Generated merchant order ID: {}", merchantOrderId);
 
         ReservationDTO pendingReservation =
                 reservationService.create(reservationRequest, customerEmail, merchantOrderId);
+        log.info("✅ Reservation created — ID: {}, total: {} €", pendingReservation.getId(), pendingReservation.getTotalPrice());
 
         String successUrl =
                 "https://localhost:4200/payment/success/" + pendingReservation.getId();
@@ -47,7 +52,15 @@ public class PaymentServiceImpl implements PaymentService {
                 .errorUrl(errorUrl)
                 .build();
 
-        return pspClient.initPayment(request);
-    }
+        log.info("📨 Sending init payment request to PSP — amount: {} €", pendingReservation.getTotalPrice());
 
+        try {
+            InitPaymentResponse response = pspClient.initPayment(request);
+            log.info("✅ PSP responded — payment ID: {}, redirect: {}", response.getPaymentId(), response.getRedirectUrl());
+            return response;
+        } catch (Exception e) {
+            log.error("❌ PSP init payment failed for order {}: {}", merchantOrderId, e.getMessage(), e);
+            throw e;
+        }
+    }
 }

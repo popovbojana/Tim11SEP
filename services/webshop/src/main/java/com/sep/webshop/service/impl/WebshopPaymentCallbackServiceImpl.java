@@ -7,10 +7,12 @@ import com.sep.webshop.exception.BadRequestException;
 import com.sep.webshop.service.WebshopPaymentCallbackService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class WebshopPaymentCallbackServiceImpl implements WebshopPaymentCallbackService {
@@ -20,12 +22,19 @@ public class WebshopPaymentCallbackServiceImpl implements WebshopPaymentCallback
     @Override
     @Transactional
     public void handle(GenericCallbackRequest request) {
+        log.info("📨 Received payment callback — order: {}, status: {}, method: {}",
+                request != null ? request.getMerchantOrderId() : "null",
+                request != null ? request.getStatus() : "null",
+                request != null ? request.getPaymentMethod() : "null");
+
         if (request == null || request.getMerchantOrderId() == null || request.getMerchantOrderId().isBlank()) {
+            log.warn("❌ Invalid callback — missing merchant order ID");
             throw new BadRequestException("Missing merchant order id.");
         }
 
         ReservationStatus newStatus = mapReservationStatus(request.getStatus());
         PaymentMethod method = mapPaymentMethod(request.getPaymentMethod());
+        log.info("⚙️ Mapped status: {} → {}, method: {} → {}", request.getStatus(), newStatus, request.getPaymentMethod(), method);
 
         Instant paidAt = request.getAcquirerTimestamp();
         String reference = request.getGlobalTransactionId();
@@ -38,6 +47,8 @@ public class WebshopPaymentCallbackServiceImpl implements WebshopPaymentCallback
                 reference,
                 paidAt
         );
+
+        log.info("✅ Callback processed — order: {}, reservation status: {}", request.getMerchantOrderId(), newStatus);
     }
 
     private ReservationStatus mapReservationStatus(String paymentStatus) {
