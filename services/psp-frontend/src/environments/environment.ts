@@ -1,3 +1,3 @@
 export const environment = {
-  apiBaseUrl: 'http://localhost:8080/psp',
+  apiBaseUrl: 'https://localhost:8080/psp',
 };

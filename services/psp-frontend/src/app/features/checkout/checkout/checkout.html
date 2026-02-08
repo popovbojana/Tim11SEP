@@ -1,55 +1,61 @@
 <div class="checkout-page">
-  @if (error()) {
-    <div class="error-box">{{ error() }}</div>
-  } @else if (!payment()) {
-    <p class="loading">Preparing payment...</p>
-  } @else {
-    <div class="checkout-card">
+  <div class="checkout-card">
+    @if (error()) {
+      <div class="error-box">
+        <b class="error-icon">⚠️</b>
+        {{ error() }}
+      </div>
+    }
+
+    @if (!payment()) {
+      <div class="skeleton-loader">
+        <div class="shimmer amount"></div>
+        <div class="shimmer btn"></div>
+      </div>
+    } @else {
       <div class="amount-section">
-        <span class="label">Total to pay</span>
+        <span class="label">Payment for Order #{{ payment()?.merchantOrderId }}</span>
         <span class="amount">
-          {{ payment()!.amount }}
-          <span class="currency">{{ payment()!.currency }}</span>
+          {{ payment()?.amount | number:'1.2-2' }}
+          <span class="currency">{{ payment()?.currency }}</span>
         </span>
       </div>
 
-      @if (!methods()) {
-        <p class="loading">Loading available payment methods...</p>
-      } @else {
-        <div class="payment-methods">
-          <p class="methods-title">Choose payment method</p>
+      <div class="payment-methods">
+        <p class="methods-title">Available Payment Methods</p>
+        
+        @if (!methods()) {
+          <p class="loading-small">Fetching options...</p>
+        } @else {
+          <div class="btn-grid">
+            @for (method of methods(); track method) {
+              <button 
+                type="button" 
+                class="method-btn"
+                [disabled]="processingMethod() !== null"
+                (click)="onPay(method)">
+                
+                @if (processingMethod() === method) {
+                  <span class="spinner"></span>
+                  Connecting...
+                } @else {
+                  Pay with {{ method }}
+                }
+              </button>
+            }
 
-          @if (hasMethod('CARD')) {
-            <button type="button" class="method-btn primary" (click)="payByCard()">
-              Pay by Card
-            </button>
-          }
-
-          @if (hasMethod('QR')) {
-            <button type="button" class="method-btn primary" (click)="payByQr()">
-              Pay by QR code
-            </button>
-          }
-
-          @if (hasMethod('PAYPAL')) {
-            <button type="button" class="method-btn primary" (click)="payByPaypal()">
-              Pay with PayPal
-            </button>
-          }
-
-          @if (hasMethod('CRYPTO')) {
-            <button type="button" class="method-btn primary" (click)="payByCrypto()">
-              Pay with Crypto
-            </button>
-          }
-
-          @if ((methods() ?? []).length === 0) {
-            <div class="error-box">
-              No payment methods available for this merchant.
-            </div>
-          }
-        </div>
-      }
+            @if (methods()?.length === 0) {
+              <div class="error-box">
+                No active payment methods found for this merchant.
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+    
+    <div class="footer-info">
+      <p>Secure payment processed by PSP System</p>
     </div>
-  }
+  </div>
 </div>

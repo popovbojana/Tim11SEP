@@ -20,4 +20,5 @@ public class CardPaymentController {
     public ResponseEntity<AuthorizeCardPaymentResponse> authorize(@Valid @RequestBody AuthorizeCardPaymentRequest request) {
         return new ResponseEntity<>(cardAuthorizationService.authorize(request), HttpStatus.OK);
     }
+
 }

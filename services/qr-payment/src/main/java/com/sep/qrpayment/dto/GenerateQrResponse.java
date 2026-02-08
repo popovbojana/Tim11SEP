@@ -10,7 +10,6 @@ import lombok.*;
 public class GenerateQrResponse {
 
     private String qrText;
-
     private String qrImageBase64;
 
 }

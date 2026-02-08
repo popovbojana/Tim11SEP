@@ -1,19 +1,46 @@
-export type PaymentMethod =
-  | 'CARD'
-  | 'QR'
-  | 'PAYPAL'
-  | 'CRYPTO';
+export interface PaymentMethodResponse {
+  id: number;
+  name: string;
+  serviceName: string;
+}
 
 export interface MerchantResponse {
   id: number;
   merchantKey: string;
-  activeMethods: PaymentMethod[];
+  fullName: string;
+  email: string;
+  successUrl: string;
+  failedUrl: string;
+  errorUrl: string;
+  serviceName: string;
+  bankAccount: string;
+  activeMethods: string[];
 }
 
-export type MerchantCreateRequest = {
+export interface MerchantCreateRequest {
   merchantKey: string;
-};
+  fullName: string;
+  email: string;
+  successUrl: string;
+  failedUrl: string;
+  errorUrl: string;
+  serviceName: string;
+  bankAccount: string;
+  methods: string[];
+}
 
-export type UpdateMethodsPayload = {
-  methods: PaymentMethod[];
-};
+export interface MerchantUpdateRequest {
+  fullName: string;
+  email: string;
+  successUrl: string;
+  failedUrl: string;
+  errorUrl: string;
+  serviceName: string;
+  bankAccount: string;
+  methods: string[];
+}
+
+export interface PaymentMethodRequest {
+  name: string;
+  serviceName: string;
+}

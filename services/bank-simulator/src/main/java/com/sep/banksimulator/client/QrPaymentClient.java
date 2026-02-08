@@ -13,15 +13,15 @@ import org.springframework.web.client.RestTemplate;
 public class QrPaymentClient {
 
     private final RestTemplate restTemplate;
-
-    private static final String QR_SERVICE_BASE = "http://localhost:8080/qr-payment";
+    private static final String BASE_URL = "https://qr-payment/api/qr";
 
     public GenerateQrResponse generate(GenerateQrRequest request) {
-        return restTemplate.postForObject(QR_SERVICE_BASE + "/api/qr/generate", request, GenerateQrResponse.class);
+        String url = BASE_URL + "/generate";
+        return restTemplate.postForObject(url, request, GenerateQrResponse.class);
     }
 
     public ValidateQrResponse validate(ValidateQrRequest request) {
-        return restTemplate.postForObject(QR_SERVICE_BASE + "/api/qr/validate", request, ValidateQrResponse.class);
+        String url = BASE_URL + "/validate";
+        return restTemplate.postForObject(url, request, ValidateQrResponse.class);
     }
-
 }

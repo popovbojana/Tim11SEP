@@ -53,7 +53,7 @@
 
           <div class="metaRow">
             <span class="metaLabel">Vehicle / day</span>
-            <span class="metaValue">{{ offer()!.vehicle.pricePerDay }} €</span>
+            <span class="metaValue">{{ offer()!.vehicle.pricePerDay }} EUR</span>
           </div>
         </div>
 
@@ -71,7 +71,7 @@
 
           <div class="metaRow">
             <span class="metaLabel">Insurance / day</span>
-            <span class="metaValue">{{ offer()!.insurancePackage.pricePerDay }} €</span>
+            <span class="metaValue">{{ offer()!.insurancePackage.pricePerDay }} EUR</span>
           </div>
         </div>
 
@@ -89,7 +89,7 @@
               <div class="service">
                 <div class="serviceTop">
                   <div class="serviceName">{{ s.name }}</div>
-                  <div class="servicePrice">{{ s.pricePerDay }} €/day</div>
+                  <div class="servicePrice">{{ s.pricePerDay }} EUR/day</div>
                 </div>
                 <div class="serviceDesc">{{ s.description }}</div>
               </div>
@@ -104,17 +104,17 @@
         <div class="pricing">
           <div class="pricingRow">
             <span class="pricingLabel">Base / day</span>
-            <span class="pricingValue">{{ offer()!.basePricePerDay }} €</span>
+            <span class="pricingValue">{{ offer()!.basePricePerDay }} EUR</span>
           </div>
 
           <div class="pricingRow">
             <span class="pricingLabel">Vehicle + insurance + base / day</span>
-            <span class="pricingValue">{{ getTotalBasePerDay() }} €</span>
+            <span class="pricingValue">{{ getTotalBasePerDay() }} EUR</span>
           </div>
 
           <div class="pricingRow">
             <span class="pricingLabel">Additional services total / day</span>
-            <span class="pricingValue">{{ getAdditionalServicesTotalPerDay() }} €</span>
+            <span class="pricingValue">{{ getAdditionalServicesTotalPerDay() }} EUR</span>
           </div>
         </div>
       </div>

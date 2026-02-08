@@ -13,7 +13,6 @@
       <button class="btn btnPrimary" type="button" (click)="submit()">Try again</button>
     </div>
   } @else if (!isLoaded()) {
-    <!-- ništa -->
   } @else if (!offer()) {
     <div class="state">
       <p class="stateText">Offer not found.</p>
@@ -70,7 +69,7 @@
                 <div class="serviceBody">
                   <div class="serviceTop">
                     <div class="serviceName">{{ s.name }}</div>
-                    <div class="servicePrice">{{ s.pricePerDay }} €/day</div>
+                    <div class="servicePrice">{{ s.pricePerDay }} EUR/day</div>
                   </div>
                   <div class="serviceDesc">{{ s.description }}</div>
                 </div>

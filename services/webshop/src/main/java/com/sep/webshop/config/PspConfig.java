@@ -8,10 +8,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class PspConfig {
 
-    @Value("${psp.base-url}")
-    private String baseUrl;
-
     @Value("${psp.merchant-key}")
     private String merchantKey;
+
+    @Value("${psp.merchant-password}")
+    private String merchantPassword;
 
 }

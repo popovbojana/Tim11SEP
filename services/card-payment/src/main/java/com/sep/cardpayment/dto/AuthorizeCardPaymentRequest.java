@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,7 +18,7 @@ public class AuthorizeCardPaymentRequest {
     private Long bankPaymentId;
 
     @Positive
-    private double amount;
+    private BigDecimal amount;
 
     @NotBlank
     private String currency;

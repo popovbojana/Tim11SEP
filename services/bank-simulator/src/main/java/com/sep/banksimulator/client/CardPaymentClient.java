@@ -19,14 +19,14 @@ import java.time.Instant;
 public class CardPaymentClient {
 
     private final RestTemplate restTemplate;
-
-    private static final String BANK_AUTH_URL = "http://localhost:8080/card-payment/api/cards/authorize";
+    private static final String BASE_URL = "https://card-payment/api/cards";
 
     public AuthorizeCardPaymentResponse authorize(AuthorizeCardPaymentRequest request) {
+        String url = BASE_URL + "/authorize";
         try {
             log.info("Initiating card authorization for amount: {} {}", request.getAmount(), request.getCurrency());
 
-            AuthorizeCardPaymentResponse response = restTemplate.postForObject(BANK_AUTH_URL, request, AuthorizeCardPaymentResponse.class);
+            AuthorizeCardPaymentResponse response = restTemplate.postForObject(url, request, AuthorizeCardPaymentResponse.class);
 
             if (response != null) {
                 log.info("Bank responded with status: {}", response.getStatus());

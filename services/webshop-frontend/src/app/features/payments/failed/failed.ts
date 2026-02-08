@@ -21,7 +21,7 @@ export class Failed {
   loading = signal<boolean>(true);
 
   constructor() {
-    this.route.queryParamMap.subscribe((params) => {
+    this.route.paramMap.subscribe((params) => {
       const idStr = params.get('reservationId');
       const id = idStr ? Number(idStr) : null;
 
