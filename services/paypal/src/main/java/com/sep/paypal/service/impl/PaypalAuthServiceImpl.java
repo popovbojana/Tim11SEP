@@ -1,6 +1,7 @@
 package com.sep.paypal.service.impl;
 
 import com.sep.paypal.service.PaypalAuthService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -12,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Base64;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class PaypalAuthServiceImpl implements PaypalAuthService {
 
@@ -31,6 +33,8 @@ public class PaypalAuthServiceImpl implements PaypalAuthService {
 
     @Override
     public String getAccessToken() {
+        log.info("🔐 Requesting PayPal access token...");
+
         String auth = clientId + ":" + secret;
         String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes());
 
@@ -43,10 +47,18 @@ public class PaypalAuthServiceImpl implements PaypalAuthService {
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
 
-        ResponseEntity<Map> response = restTemplate.postForEntity(AUTH_URL, request, Map.class);
+        try {
+            ResponseEntity<Map> response = restTemplate.postForEntity(AUTH_URL, request, Map.class);
 
-        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-            return (String) response.getBody().get("access_token");
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                log.info("✅ PayPal access token obtained successfully");
+                return (String) response.getBody().get("access_token");
+            }
+
+            log.error("❌ PayPal auth failed — status: {}", response.getStatusCode());
+        } catch (Exception e) {
+            log.error("❌ PayPal auth request failed: {}", e.getMessage(), e);
+            throw e;
         }
 
         throw new RuntimeException("Greška pri dobijanju PayPal access tokena!");

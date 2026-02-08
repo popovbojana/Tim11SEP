@@ -5,6 +5,7 @@ import com.sep.paypal.entity.PaypalTransaction;
 import com.sep.paypal.repository.PaypalTransactionRepository;
 import com.sep.paypal.service.PaypalAuthService;
 import com.sep.paypal.service.PaypalService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class PaypalServiceImpl implements PaypalService {
 
@@ -37,6 +39,8 @@ public class PaypalServiceImpl implements PaypalService {
 
     @Override
     public GenericPaymentResponse createOrder(GenericPaymentRequest genericRequest) {
+        log.info("📨 Creating PayPal order for PSP payment ID: {}", genericRequest.getPspPaymentId());
+
         String token = paypalAuthService.getAccessToken();
 
         PaypalOrderRequest request = new PaypalOrderRequest();
@@ -49,6 +53,8 @@ public class PaypalServiceImpl implements PaypalService {
 
         orderAmount.setCurrency_code(currency);
         orderAmount.setValue(String.format("%.2f", genericRequest.getAmount()).replace(",", "."));
+
+        log.info("💱 Order amount: {} {}", orderAmount.getValue(), currency);
 
         PaypalOrderRequest.PurchaseUnit unit = new PaypalOrderRequest.PurchaseUnit();
         unit.setAmount(orderAmount);
@@ -65,44 +71,57 @@ public class PaypalServiceImpl implements PaypalService {
 
         HttpEntity<PaypalOrderRequest> entity = new HttpEntity<>(request, headers);
 
-        PaypalOrderResponse response = externalRestTemplate.postForObject(
-                "https://api-m.sandbox.paypal.com/v2/checkout/orders",
-                entity,
-                PaypalOrderResponse.class
-        );
+        try {
+            PaypalOrderResponse response = externalRestTemplate.postForObject(
+                    "https://api-m.sandbox.paypal.com/v2/checkout/orders",
+                    entity,
+                    PaypalOrderResponse.class
+            );
 
-        if (response != null) {
-            Map<String, String> metadata = genericRequest.getMetadata();
+            if (response != null) {
+                log.info("✅ PayPal order created — order ID: {}", response.getId());
 
-            PaypalTransaction transaction = PaypalTransaction.builder()
-                    .pspPaymentId(genericRequest.getPspPaymentId())
-                    .paypalOrderId(response.getId())
-                    .status("CREATED")
-                    .merchantOrderId(metadata.get("merchantOrderId"))
-                    .merchantKey(metadata.get("merchantKey"))
-                    .currency(currency)
-                    .createdAt(Instant.now())
-                    .build();
+                Map<String, String> metadata = genericRequest.getMetadata();
 
-            paypalTransactionRepository.save(transaction);
+                PaypalTransaction transaction = PaypalTransaction.builder()
+                        .pspPaymentId(genericRequest.getPspPaymentId())
+                        .paypalOrderId(response.getId())
+                        .status("CREATED")
+                        .merchantOrderId(metadata.get("merchantOrderId"))
+                        .merchantKey(metadata.get("merchantKey"))
+                        .currency(currency)
+                        .createdAt(Instant.now())
+                        .build();
 
-            String approveUrl = response.getLinks().stream()
-                    .filter(link -> link.getRel().equals("approve"))
-                    .findFirst()
-                    .map(PaypalOrderResponse.Link::getHref)
-                    .orElse("");
+                paypalTransactionRepository.save(transaction);
+                log.info("💾 Transaction saved — PayPal order ID: {}, status: CREATED", response.getId());
 
-            return GenericPaymentResponse.builder()
-                    .redirectUrl(approveUrl)
-                    .externalPaymentId(response.getId())
-                    .build();
+                String approveUrl = response.getLinks().stream()
+                        .filter(link -> link.getRel().equals("approve"))
+                        .findFirst()
+                        .map(PaypalOrderResponse.Link::getHref)
+                        .orElse("");
+
+                log.info("🔗 Approve URL: {}", approveUrl);
+
+                return GenericPaymentResponse.builder()
+                        .redirectUrl(approveUrl)
+                        .externalPaymentId(response.getId())
+                        .build();
+            }
+        } catch (Exception e) {
+            log.error("❌ PayPal order creation failed: {}", e.getMessage(), e);
+            throw e;
         }
 
+        log.error("❌ PayPal order creation returned null response");
         throw new RuntimeException("PayPal order creation failed");
     }
 
     @Override
     public String captureOrder(String paypalOrderId) {
+        log.info("⚙️ Capturing PayPal order: {}", paypalOrderId);
+
         try {
             String token = paypalAuthService.getAccessToken();
 
@@ -119,22 +138,33 @@ public class PaypalServiceImpl implements PaypalService {
             );
 
             if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("✅ PayPal capture successful for order: {}", paypalOrderId);
+
                 PaypalTransaction transaction = paypalTransactionRepository.findByPaypalOrderId(paypalOrderId)
-                        .orElseThrow(() -> new RuntimeException("Transaction not found"));
+                        .orElseThrow(() -> {
+                            log.error("❌ Transaction NOT FOUND for PayPal order ID: {}", paypalOrderId);
+                            return new RuntimeException("Transaction not found");
+                        });
 
                 transaction.setStatus("COMPLETED");
                 paypalTransactionRepository.save(transaction);
+                log.info("💾 Transaction updated to COMPLETED — PayPal order ID: {}", paypalOrderId);
 
                 notifyPsp(transaction);
                 return PSP_FINALIZE_URL + transaction.getPaypalOrderId();
             }
+
+            log.error("❌ PayPal capture failed — status: {}", response.getStatusCode());
             return PSP_ERROR_URL;
         } catch (Exception e) {
+            log.error("❌ PayPal capture error for order {}: {}", paypalOrderId, e.getMessage(), e);
             return PSP_ERROR_URL;
         }
     }
 
     private void notifyPsp(PaypalTransaction transaction) {
+        log.info("📨 Sending callback to PSP for payment ID: {}", transaction.getPspPaymentId());
+
         GenericCallbackRequest callback = GenericCallbackRequest.builder()
                 .pspPaymentId(transaction.getPspPaymentId())
                 .merchantOrderId(transaction.getMerchantOrderId())
@@ -147,6 +177,11 @@ public class PaypalServiceImpl implements PaypalService {
                 .pspTimestamp(transaction.getCreatedAt())
                 .build();
 
-        loadBalancedRestTemplate.postForObject("https://PSP/api/payments/callback", callback, Void.class);
+        try {
+            loadBalancedRestTemplate.postForObject("https://PSP/api/payments/callback", callback, Void.class);
+            log.info("✅ PSP callback sent successfully for payment ID: {}", transaction.getPspPaymentId());
+        } catch (Exception e) {
+            log.error("❌ Failed to send PSP callback for payment ID {}: {}", transaction.getPspPaymentId(), e.getMessage(), e);
+        }
     }
 }
