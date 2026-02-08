@@ -2,6 +2,8 @@ package com.sep.cardpayment.service.impl;
 
 import com.sep.cardpayment.dto.AuthorizeCardPaymentRequest;
 import com.sep.cardpayment.dto.AuthorizeCardPaymentResponse;
+import com.sep.cardpayment.dto.CheckBalanceRequest;
+import com.sep.cardpayment.dto.CheckBalanceResponse;
 import com.sep.cardpayment.enums.CardBrand;
 import com.sep.cardpayment.enums.CardPaymentStatus;
 import com.sep.cardpayment.enums.FailureReason;
@@ -9,21 +11,28 @@ import com.sep.cardpayment.service.CardAuthorizationService;
 import com.sep.cardpayment.util.CardBrandDetector;
 import com.sep.cardpayment.util.ExpiryUtil;
 import com.sep.cardpayment.util.Luhn;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
 import java.time.YearMonth;
 import java.util.Set;
 import java.util.UUID;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class CardAuthorizationServiceImpl implements CardAuthorizationService {
 
-    private static final Set<String> SUPPORTED_CURRENCIES = Set.of("RSD", "EUR");
+    private static final Set<String> SUPPORTED_CURRENCIES = Set.of("EUR", "RSD");
+    private static final String BANK_BALANCE_CHECK_URL = "https://BANK-SIMULATOR/api/accounts/check-balance";
+
+    private final RestTemplate restTemplate;
 
     @Override
     public AuthorizeCardPaymentResponse authorize(AuthorizeCardPaymentRequest req) {
-
         String currency = req.getCurrency() == null ? "" : req.getCurrency().trim().toUpperCase();
         if (currency.isBlank() || !SUPPORTED_CURRENCIES.contains(currency)) {
             return failed(FailureReason.CURRENCY_NOT_SUPPORTED);
@@ -57,12 +66,36 @@ public class CardAuthorizationServiceImpl implements CardAuthorizationService {
             return failed(FailureReason.INVALID_CVV);
         }
 
+        if (!checkBalance(panDigits, cvv, req.getAmount().doubleValue())) {
+            return failed(FailureReason.INSUFFICIENT_FUNDS);
+        }
+
         return AuthorizeCardPaymentResponse.builder()
                 .status(CardPaymentStatus.SUCCESS)
-                .reason(null)
                 .globalTransactionId(UUID.randomUUID().toString())
                 .acquirerTimestamp(Instant.now())
                 .build();
+    }
+
+    private boolean checkBalance(String pan, String cvv, double amount) {
+        try {
+            CheckBalanceRequest request = CheckBalanceRequest.builder()
+                    .pan(pan)
+                    .cvv(cvv)
+                    .amount(amount)
+                    .build();
+
+            CheckBalanceResponse response = restTemplate.postForObject(
+                    BANK_BALANCE_CHECK_URL,
+                    request,
+                    CheckBalanceResponse.class
+            );
+
+            return response != null && response.isSufficient();
+        } catch (Exception e) {
+            log.error("Error checking balance: {}", e.getMessage());
+            return false;
+        }
     }
 
     private AuthorizeCardPaymentResponse failed(FailureReason reason) {
@@ -73,5 +106,4 @@ public class CardAuthorizationServiceImpl implements CardAuthorizationService {
                 .acquirerTimestamp(Instant.now())
                 .build();
     }
-
 }

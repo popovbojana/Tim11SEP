@@ -27,14 +27,14 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional
     public InitPaymentResponse initPayment(CreateReservationRequest reservationRequest, String customerEmail) {
-        log.info("📨 Initiating payment for customer: {}", customerEmail);
+        log.info("Initiating payment for customer: {}", customerEmail);
 
         String merchantOrderId = UUID.randomUUID().toString();
-        log.info("🔑 Generated merchant order ID: {}", merchantOrderId);
+        log.info("Generated merchant order ID: {}", merchantOrderId);
 
         ReservationDTO pendingReservation =
                 reservationService.create(reservationRequest, customerEmail, merchantOrderId);
-        log.info("✅ Reservation created — ID: {}, total: {} €", pendingReservation.getId(), pendingReservation.getTotalPrice());
+        log.info("Reservation created — ID: {}, total: {} €", pendingReservation.getId(), pendingReservation.getTotalPrice());
 
         InitPaymentRequest request = InitPaymentRequest.builder()
                 .merchantKey(pspConfig.getMerchantKey())
@@ -44,14 +44,14 @@ public class PaymentServiceImpl implements PaymentService {
                 .currency(pendingReservation.getCurrency())
                 .build();
 
-        log.info("📨 Sending init payment request to PSP — amount: {} €", pendingReservation.getTotalPrice());
+        log.info("Sending init payment request to PSP — amount: {} €", pendingReservation.getTotalPrice());
 
         try {
             InitPaymentResponse response = pspClient.initPayment(request);
-            log.info("✅ PSP responded — payment ID: {}, redirect: {}", response.getPaymentId(), response.getRedirectUrl());
+            log.info("PSP responded — payment ID: {}, redirect: {}", response.getPaymentId(), response.getRedirectUrl());
             return response;
         } catch (Exception e) {
-            log.error("❌ PSP init payment failed for order {}: {}", merchantOrderId, e.getMessage(), e);
+            log.error("PSP init payment failed for order {}: {}", merchantOrderId, e.getMessage(), e);
             throw e;
         }
     }

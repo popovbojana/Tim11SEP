@@ -6,9 +6,12 @@ import com.sep.banksimulator.client.QrPaymentClient;
 import com.sep.banksimulator.dto.*;
 import com.sep.banksimulator.dto.card.*;
 import com.sep.banksimulator.dto.qr.*;
+import com.sep.banksimulator.entity.BankAccount;
+import com.sep.banksimulator.entity.BankCard;
 import com.sep.banksimulator.entity.BankPayment;
 import com.sep.banksimulator.entity.BankPaymentStatus;
 import com.sep.banksimulator.exception.BadRequestException;
+import com.sep.banksimulator.repository.BankCardRepository;
 import com.sep.banksimulator.repository.BankPaymentRepository;
 import com.sep.banksimulator.service.BankPaymentService;
 import jakarta.ws.rs.NotAcceptableException;
@@ -20,8 +23,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.UUID;
 
 @Slf4j
@@ -39,6 +46,7 @@ public class BankPaymentServiceImpl implements BankPaymentService {
     private final CardPaymentClient cardPaymentClient;
     private final QrPaymentClient qrServiceClient;
     private final PspClient pspClient;
+    private final BankCardRepository bankCardRepository;
 
     @Override
     @Transactional
@@ -144,14 +152,19 @@ public class BankPaymentServiceImpl implements BankPaymentService {
 
     @Override
     @Transactional
-    public String execute(Long bankPaymentId, ExecuteBankPaymentRequest request) {
+    public AuthorizeCardPaymentResponse execute(Long bankPaymentId, ExecuteBankPaymentRequest request) {
         BankPayment payment = getById(bankPaymentId);
         checkFinalStatus(payment);
+
+        String finalizeUrl = PSP_FINALIZE_URL + payment.getPspPaymentId();
 
         if (isExpired(payment)) {
             log.warn("Payment session expired for ID: {}", bankPaymentId);
             finalizePayment(payment, BankPaymentStatus.FAILED, null, null, "CARD");
-            return PSP_FINALIZE_URL + payment.getPspPaymentId();
+            return AuthorizeCardPaymentResponse.builder()
+                    .status(CardPaymentStatus.FAILED)
+                    .redirectUrl(finalizeUrl)
+                    .build();
         }
 
         payment.setStatus(BankPaymentStatus.IN_PROGRESS);
@@ -175,12 +188,51 @@ public class BankPaymentServiceImpl implements BankPaymentService {
             } else {
                 finalizePayment(payment, BankPaymentStatus.FAILED, null, null, "CARD");
             }
+
+            if (authRes != null) {
+                authRes.setRedirectUrl(finalizeUrl);
+            }
+
+            return authRes;
+
         } catch (Exception ex) {
             log.error("Critical error during card execution for ID {}: {}", bankPaymentId, ex.getMessage());
             finalizePayment(payment, BankPaymentStatus.ERROR, null, null, "CARD");
+
+            return AuthorizeCardPaymentResponse.builder()
+                    .status(CardPaymentStatus.FAILED)
+                    .redirectUrl(finalizeUrl)
+                    .build();
+        }
+    }
+
+    public CheckBalanceResponse checkBalance(CheckBalanceRequest request) {
+        String hashedPan = hashPan(request.getPan());
+        log.info("Looking for card with hashed PAN: {}", hashedPan);
+        BankCard card = bankCardRepository.findByPan(hashedPan).orElse(null);
+
+        if (card == null) {
+            return CheckBalanceResponse.builder().sufficient(false).reason("CARD_NOT_FOUND").build();
         }
 
-        return PSP_FINALIZE_URL + payment.getPspPaymentId();
+        BankAccount account = card.getAccount();
+        boolean hasFunds = account.getBalance() >= request.getAmount();
+
+        return CheckBalanceResponse.builder()
+                .sufficient(hasFunds)
+                .reason(hasFunds ? null : "INSUFFICIENT_FUNDS")
+                .build();
+    }
+
+    private String hashPan(String pan) {
+        try {
+            String cleanPan = pan.replaceAll("\\D", "");
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(cleanPan.getBytes(StandardCharsets.UTF_8));
+            return Base64.getEncoder().encodeToString(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 algorithm not found", e);
+        }
     }
 
     private void finalizePayment(BankPayment payment, BankPaymentStatus status, String gid, Instant timestamp, String method) {

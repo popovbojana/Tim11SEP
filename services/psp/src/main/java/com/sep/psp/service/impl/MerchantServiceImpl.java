@@ -36,10 +36,10 @@ public class MerchantServiceImpl implements MerchantService {
     @Override
     @Transactional
     public MerchantResponse create(MerchantCreateRequest request) {
-        log.info("📨 Creating merchant — key: {}, name: {}", request.getMerchantKey(), request.getFullName());
+        log.info("Creating merchant — key: {}, name: {}", request.getMerchantKey(), request.getFullName());
 
         if (merchantRepository.existsByMerchantKey(request.getMerchantKey())) {
-            log.warn("❌ Merchant already exists — key: {}", request.getMerchantKey());
+            log.warn("Merchant already exists — key: {}", request.getMerchantKey());
             throw new BadRequestException("Merchant with key: " + request.getMerchantKey() + " already exists.");
         }
 
@@ -60,7 +60,7 @@ public class MerchantServiceImpl implements MerchantService {
                 .build();
 
         Merchant saved = merchantRepository.save(merchant);
-        log.info("✅ Merchant created — ID: {}, key: {}, methods: {}", saved.getId(), saved.getMerchantKey(), request.getMethods());
+        log.info("Merchant created — ID: {}, key: {}, methods: {}", saved.getId(), saved.getMerchantKey(), request.getMethods());
 
         saveCredentialsToFile(saved.getMerchantKey(), rawPassword, saved.getFullName());
 
@@ -70,7 +70,7 @@ public class MerchantServiceImpl implements MerchantService {
     @Override
     @Transactional
     public MerchantResponse update(String merchantKey, MerchantUpdateRequest request) {
-        log.info("⚙️ Updating merchant: {}", merchantKey);
+        log.info("Updating merchant: {}", merchantKey);
 
         Merchant merchant = getByMerchantKey(merchantKey);
 
@@ -84,7 +84,7 @@ public class MerchantServiceImpl implements MerchantService {
         merchant.setActiveMethods(mapMethods(request.getMethods()));
 
         Merchant saved = merchantRepository.save(merchant);
-        log.info("✅ Merchant updated — key: {}, new methods: {}", merchantKey, request.getMethods());
+        log.info("Merchant updated — key: {}, new methods: {}", merchantKey, request.getMethods());
 
         return toResponse(saved);
     }
@@ -92,10 +92,10 @@ public class MerchantServiceImpl implements MerchantService {
     @Override
     @Transactional(readOnly = true)
     public Merchant getByMerchantKey(String merchantKey) {
-        log.info("🔍 Looking up merchant by key: {}", merchantKey);
+        log.info("Looking up merchant by key: {}", merchantKey);
         return merchantRepository.findByMerchantKey(merchantKey)
                 .orElseThrow(() -> {
-                    log.warn("❌ Merchant NOT FOUND — key: {}", merchantKey);
+                    log.warn("Merchant NOT FOUND — key: {}", merchantKey);
                     return new NotFoundException("Merchant with key: " + merchantKey + " not found.");
                 });
     }
@@ -103,7 +103,7 @@ public class MerchantServiceImpl implements MerchantService {
     @Override
     @Transactional(readOnly = true)
     public MerchantResponse getMerchant(String merchantKey) {
-        log.info("🔍 Getting merchant response for key: {}", merchantKey);
+        log.info("Getting merchant response for key: {}", merchantKey);
         return toResponse(getByMerchantKey(merchantKey));
     }
 
@@ -121,40 +121,40 @@ public class MerchantServiceImpl implements MerchantService {
     @Override
     @Transactional
     public void remove(Long id) {
-        log.info("🗑️ Removing merchant with ID: {}", id);
+        log.info("Removing merchant with ID: {}", id);
 
         Merchant merchant = merchantRepository.findById(id)
                 .orElseThrow(() -> {
-                    log.warn("❌ Merchant NOT FOUND — ID: {}", id);
+                    log.warn("Merchant NOT FOUND — ID: {}", id);
                     return new NotFoundException("Merchant with ID " + id + " not found.");
                 });
 
         merchant.getActiveMethods().clear();
         merchantRepository.delete(merchant);
-        log.info("✅ Merchant removed — ID: {}, key: {}", id, merchant.getMerchantKey());
+        log.info("Merchant removed — ID: {}, key: {}", id, merchant.getMerchantKey());
     }
 
     @Override
     @Transactional(readOnly = true)
     public Set<String> getActiveMethods(String merchantKey) {
-        log.info("🔍 Fetching active methods for merchant: {}", merchantKey);
+        log.info("Fetching active methods for merchant: {}", merchantKey);
         Merchant merchant = getByMerchantKey(merchantKey);
         Set<String> methods = merchant.getActiveMethods().stream()
                 .map(PaymentMethod::getName)
                 .collect(Collectors.toSet());
-        log.info("✅ Active methods for {}: {}", merchantKey, methods);
+        log.info("Active methods for {}: {}", merchantKey, methods);
         return methods;
     }
 
     private Set<PaymentMethod> mapMethods(Set<String> methodNames) {
         if (methodNames == null || methodNames.isEmpty()) {
-            log.warn("⚠️ No payment methods provided");
+            log.warn("No payment methods provided");
             throw new BadRequestException("At least one payment method must be selected.");
         }
         return methodNames.stream()
                 .map(name -> paymentMethodRepository.findByName(name.toUpperCase().trim())
                         .orElseThrow(() -> {
-                            log.warn("❌ Unsupported payment method: {}", name);
+                            log.warn("Unsupported payment method: {}", name);
                             return new BadRequestException("Method not supported: " + name);
                         }))
                 .collect(Collectors.toSet());
@@ -180,7 +180,7 @@ public class MerchantServiceImpl implements MerchantService {
     }
 
     private String generateSecurePassword() {
-        log.info("🔐 Generating secure merchant password");
+        log.info("Generating secure merchant password");
         SecureRandom random = new SecureRandom();
         byte[] bytes = new byte[24];
         random.nextBytes(bytes);
@@ -189,7 +189,7 @@ public class MerchantServiceImpl implements MerchantService {
 
     private void saveCredentialsToFile(String key, String rawPassword, String merchantName) {
         String fileName = "merchants_credentials.txt";
-        log.info("💾 Saving credentials to file for merchant: {}", merchantName);
+        log.info("Saving credentials to file for merchant: {}", merchantName);
 
         try (FileWriter fw = new FileWriter(fileName, true);
              PrintWriter pw = new PrintWriter(fw)) {
@@ -199,9 +199,9 @@ public class MerchantServiceImpl implements MerchantService {
             pw.println("Password: " + rawPassword);
             pw.println("Generated: " + java.time.LocalDateTime.now());
             pw.println("--------------------------------------------------");
-            log.info("✅ Credentials saved for merchant: {}", key);
+            log.info("Credentials saved for merchant: {}", key);
         } catch (IOException e) {
-            log.error("❌ Failed to save credentials for merchant {}: {}", key, e.getMessage(), e);
+            log.error("Failed to save credentials for merchant {}: {}", key, e.getMessage(), e);
             throw new RuntimeException("Failed to save merchant credentials to file", e);
         }
     }

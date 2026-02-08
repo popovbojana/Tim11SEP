@@ -16,5 +16,6 @@ public class AuthorizeCardPaymentResponse {
     private FailureReason reason;
     private String globalTransactionId;
     private Instant acquirerTimestamp;
+    private String redirectUrl;
 
 }

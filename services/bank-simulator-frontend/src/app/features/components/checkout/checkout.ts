@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import {
   BankPaymentApi,
@@ -25,7 +25,6 @@ export class Checkout {
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router,
     private fb: FormBuilder,
     private bankPaymentApi: BankPaymentApi,
   ) {
@@ -79,35 +78,32 @@ export class Checkout {
     const rawValues = this.form.getRawValue();
     const payload: ExecutePaymentRequest = {
       ...rawValues,
-      pan: this.onlyDigits(rawValues.pan)
+      pan: this.onlyDigits(rawValues.pan),
     };
 
     this.bankPaymentApi.execute(this.bankPaymentId, payload).subscribe({
       next: (res: any) => {
         this.loading = false;
+        
         if (res.status === 'SUCCESS') {
-          alert('✅ Payment successful!');
-          window.location.href = 'http://localhost:4200/reservations';
+          alert('Payment successful!');
         } else {
-          if (res.reason === 'INSUFFICIENT_FUNDS') {
-            this.error = 'Denied: insufficient funds.';
-          } else if (res.reason === 'INVALID_CARD_DATA') {
-            this.error = 'Denied: invalid card data.';
-          } else if (res.reason === 'INVALID_PAN') {
-            this.error = 'Denied: invalid card number.';
-          } else if (res.reason === 'INVALID_CVV') {
-            this.error = 'Denied: invalid CVV';
-          } else if (res.reason === 'EXPIRED_CARD') {
-            this.error = 'Denied: card expired.';
-          } else {
-            this.error = 'Payment denied. Try again.';
-          }
-          this.form.controls.securityCode.reset();
+          let message = 'Payment denied.';
+          if (res.reason === 'INSUFFICIENT_FUNDS') message = 'Denied: Insufficient funds.';
+          else if (res.reason === 'INVALID_CARD_DATA') message = 'Denied: Invalid card data.';
+          else if (res.reason === 'EXPIRED_CARD') message = 'Denied: Card expired.';
+          
+          alert(message);
+        }
+
+        if (res.redirectUrl) {
+          window.location.href = res.redirectUrl;
         }
       },
       error: (err) => {
         this.loading = false;
         this.error = err?.error?.message ?? 'Bank communication error';
+        alert('System error occurred. Please try again.');
       },
     });
   }

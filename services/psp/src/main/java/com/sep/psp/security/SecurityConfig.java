@@ -34,7 +34,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/api/bank/callback").permitAll()
-                        .requestMatchers("/api/payments/**").permitAll() //temporary
+                        .requestMatchers("/api/payments/**").permitAll()
                         .requestMatchers("/api/merchants/*/methods").permitAll()
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated()

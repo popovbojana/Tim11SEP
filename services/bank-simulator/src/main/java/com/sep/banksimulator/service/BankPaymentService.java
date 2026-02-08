@@ -7,13 +7,10 @@ import com.sep.banksimulator.dto.qr.QrImageResponse;
 
 public interface BankPaymentService {
 
-    InitBankPaymentResponse init(InitBankPaymentRequest request);
-
-    InitBankPaymentResponse initQr(InitBankPaymentRequest request);
-
+    GenericPaymentResponse initialize(GenericPaymentRequest request);
     QrImageResponse getQr(Long bankPaymentId);
-
     String confirmQr(Long bankPaymentId, ConfirmQrPaymentRequest request);
-
     AuthorizeCardPaymentResponse execute(Long bankPaymentId, ExecuteBankPaymentRequest request);
+    CheckBalanceResponse checkBalance(CheckBalanceRequest request);
+
 }

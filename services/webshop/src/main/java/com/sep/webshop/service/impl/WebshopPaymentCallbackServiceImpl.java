@@ -22,18 +22,18 @@ public class WebshopPaymentCallbackServiceImpl implements WebshopPaymentCallback
     @Override
     @Transactional
     public void handle(GenericCallbackRequest request) {
-        log.info("📨 Received payment callback — order: {}, status: {}, method: {}",
+        log.info("Received payment callback — order: {}, status: {}, method: {}",
                 request != null ? request.getMerchantOrderId() : "null",
                 request != null ? request.getStatus() : "null",
                 request != null ? request.getPaymentMethod() : "null");
 
         if (request == null || request.getMerchantOrderId() == null || request.getMerchantOrderId().isBlank()) {
-            log.warn("❌ Invalid callback — missing merchant order ID");
+            log.warn("Invalid callback — missing merchant order ID");
             throw new BadRequestException("Missing merchant order id.");
         }
 
         ReservationStatus newStatus = mapReservationStatus(request.getStatus());
-        log.info("⚙️ Mapped status: {} → {}, method: {}", request.getStatus(), newStatus, request.getPaymentMethod());
+        log.info("Mapped status: {} → {}, method: {}", request.getStatus(), newStatus, request.getPaymentMethod());
 
         reservationService.updateFromPaymentCallback(
                 request.getMerchantOrderId(),
@@ -44,7 +44,7 @@ public class WebshopPaymentCallbackServiceImpl implements WebshopPaymentCallback
                 request.getAcquirerTimestamp() != null ? request.getAcquirerTimestamp() : Instant.now()
         );
 
-        log.info("✅ Callback processed — order: {}, reservation status: {}", request.getMerchantOrderId(), newStatus);
+        log.info("Callback processed — order: {}, reservation status: {}", request.getMerchantOrderId(), newStatus);
     }
 
     private ReservationStatus mapReservationStatus(String paymentStatus) {
@@ -55,7 +55,7 @@ public class WebshopPaymentCallbackServiceImpl implements WebshopPaymentCallback
             case "FAILED" -> ReservationStatus.FAILED;
             case "EXPIRED" -> ReservationStatus.EXPIRED;
             default -> {
-                log.warn("⚠️ Unknown payment status: '{}', defaulting to CANCELED", paymentStatus);
+                log.warn("Unknown payment status: '{}', defaulting to CANCELED", paymentStatus);
                 yield ReservationStatus.CANCELED;
             }
         };

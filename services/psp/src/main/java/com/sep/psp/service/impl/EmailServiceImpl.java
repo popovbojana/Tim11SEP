@@ -26,9 +26,9 @@ public class EmailServiceImpl implements EmailService {
 
         try {
             mailSender.send(message);
-            log.info("✅ MFA code sent successfully to: {}", to);
+            log.info("MFA code sent successfully to: {}", to);
         } catch (Exception e) {
-            log.error("❌ Failed to send MFA code to {}: {}", to, e.getMessage(), e);
+            log.error("Failed to send MFA code to {}: {}", to, e.getMessage(), e);
             throw e;
         }
     }

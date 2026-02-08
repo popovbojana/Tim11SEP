@@ -23,25 +23,25 @@ public class RentalOfferServiceImpl implements RentalOfferService {
     @Override
     @Transactional(readOnly = true)
     public List<RentalOfferDTO> getActiveOffers() {
-        log.info("📋 Fetching all active rental offers");
+        log.info("Fetching all active rental offers");
         List<RentalOfferDTO> offers = rentalOfferRepository.findAllByActiveTrue()
                 .stream()
                 .map(WebshopMapper::toDTO)
                 .toList();
-        log.info("✅ Found {} active offers", offers.size());
+        log.info("Found {} active offers", offers.size());
         return offers;
     }
 
     @Override
     @Transactional(readOnly = true)
     public RentalOfferDTO getOffer(Long offerId) {
-        log.info("🔍 Fetching rental offer by ID: {}", offerId);
+        log.info("Fetching rental offer by ID: {}", offerId);
         RentalOffer offer = rentalOfferRepository.findByIdAndActiveTrue(offerId)
                 .orElseThrow(() -> {
-                    log.warn("❌ Offer NOT FOUND — ID: {}", offerId);
+                    log.warn("Offer NOT FOUND — ID: {}", offerId);
                     return new NotFoundException("Offer with id: " + offerId + " not found.");
                 });
-        log.info("✅ Offer found — ID: {}", offerId);
+        log.info("Offer found — ID: {}", offerId);
         return WebshopMapper.toDTO(offer);
     }
 }

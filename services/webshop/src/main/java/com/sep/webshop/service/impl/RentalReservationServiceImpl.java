@@ -31,13 +31,13 @@ public class RentalReservationServiceImpl implements RentalReservationService {
     @Override
     @Transactional
     public ReservationDTO create(CreateReservationRequest request, String customerEmail, String merchantOrderId) {
-        log.info("📨 Creating reservation — customer: {}, offer ID: {}, order: {}", customerEmail, request.getOfferId(), merchantOrderId);
+        log.info("Creating reservation — customer: {}, offer ID: {}, order: {}", customerEmail, request.getOfferId(), merchantOrderId);
 
         validateDates(request);
 
         RentalOffer offer = rentalOfferRepository.findByIdAndActiveTrue(request.getOfferId())
                 .orElseThrow(() -> {
-                    log.warn("❌ Offer NOT FOUND — ID: {}", request.getOfferId());
+                    log.warn("Offer NOT FOUND — ID: {}", request.getOfferId());
                     return new NotFoundException("Offer with id: " + request.getOfferId() + " not found.");
                 });
 
@@ -86,7 +86,7 @@ public class RentalReservationServiceImpl implements RentalReservationService {
 
         RentalReservation r = rentalReservationRepository.findByMerchantOrderId(merchantOrderId)
                 .orElseThrow(() -> {
-                    log.error("❌ Reservation NOT FOUND — merchant order ID: {}", merchantOrderId);
+                    log.error("Reservation NOT FOUND — merchant order ID: {}", merchantOrderId);
                     return new NotFoundException("Reservation with merchant order id: " + merchantOrderId + " not found.");
                 });
 
@@ -101,38 +101,37 @@ public class RentalReservationServiceImpl implements RentalReservationService {
 
         log.info("Updated reservation {} status to {} via callback", merchantOrderId, newStatus);
         rentalReservationRepository.save(r);
-        log.info("✅ Reservation updated — ID: {}, new status: {}, method: {}", r.getId(), newStatus, method);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ReservationDTO> getPurchaseHistory(String customerEmail) {
-        log.info("📋 Fetching purchase history for: {}", customerEmail);
+        log.info("Fetching purchase history for: {}", customerEmail);
         List<ReservationDTO> history = rentalReservationRepository.findAllByCustomerEmailOrderByCreatedAtDesc(customerEmail)
                 .stream()
                 .map(WebshopMapper::toDTO)
                 .toList();
-        log.info("✅ Found {} reservations for {}", history.size(), customerEmail);
+        log.info("Found {} reservations for {}", history.size(), customerEmail);
         return history;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ReservationDTO> getActiveReservations(String customerEmail) {
-        log.info("📋 Fetching active reservations for: {}", customerEmail);
+        log.info("Fetching active reservations for: {}", customerEmail);
         List<ReservationDTO> active = rentalReservationRepository.findAllByCustomerEmailAndStatusInOrderByCreatedAtDesc(
                         customerEmail,
                         List.of(ReservationStatus.CREATED, ReservationStatus.CONFIRMED)
                 ).stream()
                 .map(WebshopMapper::toDTO)
                 .toList();
-        log.info("✅ Found {} active reservations for {}", active.size(), customerEmail);
+        log.info("Found {} active reservations for {}", active.size(), customerEmail);
         return active;
     }
 
     private void validateDates(CreateReservationRequest request) {
         if (request.getStartDate() == null || request.getEndDate() == null) {
-            log.warn("⚠️ Missing dates — start: {}, end: {}", request.getStartDate(), request.getEndDate());
+            log.warn("Missing dates — start: {}, end: {}", request.getStartDate(), request.getEndDate());
             throw new BadRequestException("Start and end dates are required.");
         }
     }
