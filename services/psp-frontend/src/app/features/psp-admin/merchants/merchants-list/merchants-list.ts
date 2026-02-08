@@ -36,6 +36,21 @@ export class MerchantsList implements OnInit {
     });
   }
 
+  deleteMerchant(id: number): void {
+    if (!confirm('Are you sure you want to delete this merchant? All their payment configurations will be lost.')) {
+      return;
+    }
+
+    this.merchantApi.delete(id).subscribe({
+      next: () => {
+        this.load();
+      },
+      error: (err) => {
+        this.errorMessage.set(err?.error?.message ?? 'Failed to delete merchant.');
+      }
+    });
+  }
+
   trackByMerchantKey(_: number, item: MerchantResponse): string {
     return item.merchantKey;
   }

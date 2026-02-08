@@ -25,9 +25,9 @@
     </header>
 
     @if (error) {
-      <div class="alert">
-        {{ error }}
-      </div>
+    <div class="alert">
+      {{ error }}
+    </div>
     }
 
     <form [formGroup]="form" (ngSubmit)="submit()" class="authForm">
@@ -42,7 +42,7 @@
           autocomplete="cc-name"
         />
         @if (form.controls.cardHolderName.touched && form.controls.cardHolderName.invalid) {
-          <p class="fieldError">Card holder name is required.</p>
+        <p class="fieldError">Card holder name is required.</p>
         }
       </div>
 
@@ -58,7 +58,7 @@
           inputmode="numeric"
         />
         @if (form.controls.pan.touched && form.controls.pan.invalid) {
-          <p class="fieldError">Card number is required.</p>
+        <p class="fieldError">Card number is required.</p>
         }
       </div>
 
@@ -75,7 +75,7 @@
             inputmode="numeric"
           />
           @if (form.controls.expiry.touched && form.controls.expiry.invalid) {
-            <p class="fieldError">Expiry is required.</p>
+          <p class="fieldError">Expiry is required.</p>
           }
         </div>
 
@@ -91,7 +91,7 @@
             inputmode="numeric"
           />
           @if (form.controls.securityCode.touched && form.controls.securityCode.invalid) {
-            <p class="fieldError">CVV is required.</p>
+          <p class="fieldError">CVV is required.</p>
           }
         </div>
       </div>

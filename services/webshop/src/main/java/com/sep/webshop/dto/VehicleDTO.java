@@ -3,6 +3,8 @@ package com.sep.webshop.dto;
 import com.sep.webshop.entity.VehicleType;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -11,15 +13,10 @@ import lombok.*;
 public class VehicleDTO {
 
     private Long id;
-
     private VehicleType type;
-
     private String brand;
-
     private String model;
-
-    private double pricePerDay;
-
+    private BigDecimal pricePerDay;
     private String description;
 
 }

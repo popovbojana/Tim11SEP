@@ -1,7 +1,7 @@
 export type ReservationStatus =
+  | 'PENDING'
   | 'CREATED'
   | 'CONFIRMED'
+  | 'FAILED'
   | 'CANCELED'
-  | 'EXPIRED'
-  | 'COMPLETED'
-  | 'PENDING';
+  | 'EXPIRED';

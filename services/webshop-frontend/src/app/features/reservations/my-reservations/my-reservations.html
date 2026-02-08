@@ -35,7 +35,6 @@
     @if (selectedTab() === 'ACTIVE') {
 
       @if (activeReservations() === null) {
-        <!-- ništa -->
       } @else if (activeReservations()!.length === 0) {
         <div class="state">
           <p class="stateText">No active reservations.</p>
@@ -67,7 +66,7 @@
               <div class="meta">
                 <div class="metaRow">
                   <span class="metaLabel">Total</span>
-                  <span class="metaValue">{{ r.totalPrice }} €</span>
+                  <span class="metaValue">{{ r.totalPrice }} EUR</span>
                 </div>
               </div>
 
@@ -111,12 +110,12 @@
                 <div class="right">
                   <span
                     class="badge"
-                    [class.badgeCompleted]="r.status === 'COMPLETED'"
-                    [class.badgeCanceled]="r.status === 'CANCELED'"
-                    [class.badgeExpired]="r.status === 'EXPIRED'"
+                    [class.badgePending]="r.status === 'PENDING'"
                     [class.badgeCreated]="r.status === 'CREATED'"
                     [class.badgeConfirmed]="r.status === 'CONFIRMED'"
-                    [class.badgePending]="r.status === 'PENDING'"
+                    [class.badgeFailed]="r.status === 'FAILED'"
+                    [class.badgeCanceled]="r.status === 'CANCELED'"
+                    [class.badgeExpired]="r.status === 'EXPIRED'"
                   >
                     {{ r.status }}
                   </span>
@@ -126,7 +125,7 @@
               <div class="meta">
                 <div class="metaRow">
                   <span class="metaLabel">Total</span>
-                  <span class="metaValue">{{ r.totalPrice }} €</span>
+                  <span class="metaValue">{{ r.totalPrice }} EUR</span>
                 </div>
 
                 @if (r.paidAt && r.status !== 'CANCELED' && r.status !== 'EXPIRED') {

@@ -1,6 +1,6 @@
 package com.sep.banksimulator.client;
 
-import com.sep.banksimulator.dto.PspPaymentResponse;
+import com.sep.banksimulator.dto.GenericCallbackRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -10,10 +10,10 @@ import org.springframework.web.client.RestTemplate;
 public class PspClient {
 
     private final RestTemplate restTemplate;
+    private static final String BASE_URL = "https://psp/api/payments";
 
-    public PspPaymentResponse getPayment(Long pspPaymentId) {
-        String url = "http://localhost:8080/psp/api/payments/" + pspPaymentId;
-        return restTemplate.getForObject(url, PspPaymentResponse.class);
+    public void sendCallback(GenericCallbackRequest request) {
+        String url = BASE_URL + "/callback";
+        restTemplate.postForObject(url, request, Void.class);
     }
-
 }

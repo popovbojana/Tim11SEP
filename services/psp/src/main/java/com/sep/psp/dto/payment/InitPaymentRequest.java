@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,18 +21,13 @@ public class InitPaymentRequest {
     private String merchantOrderId;
 
     @NotNull
+    private Long reservationId;
+
+    @NotNull
     @Positive
-    private Double amount;
+    private BigDecimal amount;
 
     @NotBlank
     private String currency;
 
-    @NotBlank
-    private String successUrl;
-
-    @NotBlank
-    private String failedUrl;
-
-    @NotBlank
-    private String errorUrl;
 }

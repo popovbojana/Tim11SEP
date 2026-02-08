@@ -1,58 +1,118 @@
 <section class="authPage">
-  <div class="authCard">
+  <div class="authCard wide">
     <header class="authHeader">
-      <h4 class="authTitle">Create merchant</h4>
-      <p class="authSubtitle">
-        Add a new merchant to the PSP system. Merchant key must be unique.
-      </p>
+      <h4 class="authTitle">Create Merchant</h4>
+      <p class="authSubtitle">Configure a new client and their payment channels.</p>
     </header>
 
-    @if (error) {
-      <div class="alert">
-        {{ error }}
-      </div>
+    @if (errorMessage()) {
+      <div class="alert">{{ errorMessage() }}</div>
     }
 
     <form [formGroup]="form" (ngSubmit)="submit()" class="authForm">
-      <div class="field">
-        <label class="label" for="merchantKey">Merchant key</label>
-        <input
-          id="merchantKey"
-          class="input"
-          type="text"
-          formControlName="merchantKey"
-          placeholder="e.g. acme_store_01"
-          autocomplete="off"
-        />
-
-        @if (form.controls.merchantKey.touched && form.controls.merchantKey.invalid) {
-          <p class="errorText">
-            @if (form.controls.merchantKey.errors?.['required']) {
-              Merchant key is required.
-            } @else if (form.controls.merchantKey.errors?.['minlength']) {
-              Minimum is 3 characters.
-            } @else if (form.controls.merchantKey.errors?.['maxlength']) {
-              Maximum is 64 characters.
-            } @else if (form.controls.merchantKey.errors?.['pattern']) {
-              Allowed: letters, numbers, dot (.), underscore (_) and dash (-).
-            } @else {
-              Invalid merchant key.
-            }
-          </p>
-        }
-
-        <p class="helpText">
-          Tip: use a stable identifier (no spaces). Example: <span class="mono">merchant_123</span>
-        </p>
+      <div class="formGrid">
+        <div class="field">
+          <label class="label">Full Name</label>
+          <input class="input" formControlName="fullName" [class.inputError]="form.controls.fullName.touched && form.controls.fullName.invalid" />
+          @if (form.controls.fullName.touched && form.controls.fullName.invalid) {
+            <p class="errorText">Name is required.</p>
+          }
+        </div>
+        <div class="field">
+          <label class="label">Email Address</label>
+          <input class="input" type="email" formControlName="email" [class.inputError]="form.controls.email.touched && form.controls.email.invalid" />
+          @if (form.controls.email.touched && form.controls.email.invalid) {
+            <p class="errorText">Enter a valid email address.</p>
+          }
+        </div>
+        <div class="field">
+          <label class="label">Merchant Key</label>
+          <input class="input" formControlName="merchantKey" [class.inputError]="form.controls.merchantKey.touched && form.controls.merchantKey.invalid" />
+          @if (form.controls.merchantKey.touched && form.controls.merchantKey.invalid) {
+            <p class="errorText">Key is required (min 3 chars, letters/numbers/dot/dash).</p>
+          }
+        </div>
       </div>
 
-      <button class="btnPrimary" type="submit" [disabled]="loading">
-        {{ loading ? 'Creating...' : 'Create merchant' }}
+      <div class="divider"></div>
+
+      <div class="formGrid">
+        <div class="field">
+          <label class="label">Bank Account</label>
+          <input class="input" formControlName="bankAccount" placeholder="160-0000000000123-45" [class.inputError]="form.controls.bankAccount.touched && form.controls.bankAccount.invalid" />
+          @if (form.controls.bankAccount.touched && form.controls.bankAccount.invalid) {
+            <p class="errorText">Valid bank account is required.</p>
+          }
+        </div>
+        <div class="field">
+          <label class="label">Eureka Service Name</label>
+          <input class="input" formControlName="serviceName" [class.inputError]="form.controls.serviceName.touched && form.controls.serviceName.invalid" />
+          @if (form.controls.serviceName.touched && form.controls.serviceName.invalid) {
+            <p class="errorText">Eureka service name is required.</p>
+          }
+        </div>
+      </div>
+
+      <div class="formGrid mt-20">
+        <div class="field">
+          <label class="label">Success URL</label>
+          <input class="input" formControlName="successUrl" placeholder="https://..." [class.inputError]="form.controls.successUrl.touched && form.controls.successUrl.invalid" />
+          @if (form.controls.successUrl.touched && form.controls.successUrl.invalid) {
+            <p class="errorText">Must start with https://</p>
+          }
+        </div>
+        <div class="field">
+          <label class="label">Failed URL</label>
+          <input class="input" formControlName="failedUrl" placeholder="https://..." [class.inputError]="form.controls.failedUrl.touched && form.controls.failedUrl.invalid" />
+          @if (form.controls.failedUrl.touched && form.controls.failedUrl.invalid) {
+            <p class="errorText">Must start with https://</p>
+          }
+        </div>
+        <div class="field">
+          <label class="label">Error URL</label>
+          <input class="input" formControlName="errorUrl" placeholder="https://..." [class.inputError]="form.controls.errorUrl.touched && form.controls.errorUrl.invalid" />
+          @if (form.controls.errorUrl.touched && form.controls.errorUrl.invalid) {
+            <p class="errorText">Must start with https://</p>
+          }
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="field">
+        <label class="label">Payment Methods</label>
+        <div class="customSelect">
+          <div class="selectTrigger" (click)="dropdownOpen.set(!dropdownOpen())" [class.active]="dropdownOpen()" [class.inputError]="form.controls.methods.touched && form.controls.methods.invalid">
+            <span class="placeholder">
+              @if (form.controls.methods.value.length === 0) { Select methods... }
+              @else { {{ form.controls.methods.value.join(', ') }} }
+            </span>
+            <svg class="chevron" [class.rotated]="dropdownOpen()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+
+          @if (dropdownOpen()) {
+            <div class="dropdownList">
+              @for (m of availableMethods(); track m) {
+                <label class="dropdownItem">
+                  <input type="checkbox" [checked]="form.controls.methods.value.includes(m)" (change)="toggleMethod(m)" />
+                  <span>{{ m }}</span>
+                </label>
+              }
+            </div>
+          }
+        </div>
+        @if (form.controls.methods.touched && form.controls.methods.invalid) {
+          <p class="errorText">Select at least one payment method.</p>
+        }
+      </div>
+
+      <button class="btnPrimary" type="submit" [disabled]="loading() || form.invalid">
+        {{ loading() ? 'Creating...' : 'Register Merchant' }}
       </button>
 
-      <p class="hint">
-        <a class="link" routerLink="/merchants">Back to merchants</a>
-      </p>
+      <p class="hint"><a class="link" routerLink="/merchants">Back to list</a></p>
     </form>
   </div>
 </section>

@@ -22,13 +22,36 @@ public class Merchant {
     @Column(nullable = false, unique = true)
     private String merchantKey;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(
+    @Column(nullable = false)
+    private String merchantPassword;
+
+    @Column(nullable = false)
+    private String fullName;
+
+    @Column(nullable = false)
+    private String email;
+
+    @Column(nullable = false)
+    private String successUrl;
+
+    @Column(nullable = false)
+    private String failedUrl;
+
+    @Column(nullable = false)
+    private String errorUrl;
+
+    @Column(nullable = false)
+    private String serviceName;
+
+    @Column(nullable = false)
+    private String bankAccount;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
             name = "merchant_payment_methods",
-            joinColumns = @JoinColumn(name = "merchant_id")
+            joinColumns = @JoinColumn(name = "merchant_id"),
+            inverseJoinColumns = @JoinColumn(name = "payment_method_id")
     )
-    @Enumerated(EnumType.STRING)
-    @Column(name = "payment_method", nullable = false)
     @Builder.Default
     private Set<PaymentMethod> activeMethods = new HashSet<>();
 }

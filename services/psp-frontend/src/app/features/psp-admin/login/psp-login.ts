@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import { AuthApiService, LoginRequest } from '../../../core/services/auth-api/auth-api';
+import { Router } from '@angular/router';
+import { AuthApiService } from '../../../core/services/auth-api/auth-api';
 import { TokenService } from '../../../core/services/token/token';
+import { LoginRequest, MfaVerificationRequest } from '../../../shared/models/auth';
 
 @Component({
   selector: 'app-psp-login',
@@ -13,10 +14,15 @@ import { TokenService } from '../../../core/services/token/token';
   styleUrl: './psp-login.scss',
 })
 export class PspLogin {
-  error: string | null = null;
-  loading = false;
+  error = signal<string | null>(null);
+  loading = signal<boolean>(false);
+  showMfa = signal<boolean>(false);
+  userEmail = signal<string>('');
+  
+  otpSteps = [0, 1, 2, 3, 4, 5];
+  otpValues = signal<string[]>(['', '', '', '', '', '']);
 
-  form;
+  loginForm;
 
   constructor(
     private fb: FormBuilder,
@@ -24,35 +30,95 @@ export class PspLogin {
     private tokenService: TokenService,
     private router: Router
   ) {
-    this.form = this.fb.nonNullable.group({
+    this.loginForm = this.fb.nonNullable.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
     });
   }
 
-  submit(): void {
-    this.error = null;
-
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
+  onOtpInput(event: any, index: number): void {
+    const value = event.target.value;
+    if (value.length > 1) {
+      event.target.value = value.charAt(0);
       return;
     }
 
-    this.loading = true;
+    const currentValues = [...this.otpValues()];
+    currentValues[index] = value;
+    this.otpValues.set(currentValues);
 
-    const payload: LoginRequest = this.form.getRawValue();
+    if (value && index < 5) {
+      const nextInput = event.target.nextElementSibling as HTMLInputElement;
+      if (nextInput) nextInput.focus();
+    }
+  }
 
+  onKeyDown(event: KeyboardEvent, index: number): void {
+    if (event.key === 'Backspace' && !this.otpValues()[index] && index > 0) {
+      const prevInput = (event.target as HTMLInputElement).previousElementSibling as HTMLInputElement;
+      if (prevInput) prevInput.focus();
+    }
+  }
+
+  submitLogin(): void {
+    if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
+      return;
+    }
+    this.error.set(null);
+    this.loading.set(true);
+    const payload: LoginRequest = this.loginForm.getRawValue();
     this.authApi.login(payload).subscribe({
       next: (res) => {
-        this.loading = false;
+        this.loading.set(false);
+        if (res.mfaRequired) {
+          this.userEmail.set(res.email);
+          this.showMfa.set(true);
+        } else {
+          this.tokenService.setToken(res.token);
+          this.router.navigate(['/merchants']);
+        }
+      },
+      error: (err) => {
+        this.loading.set(false);
+        this.handleError(err);
+      },
+    });
+  }
+
+  submitMfa(): void {
+    const code = this.otpValues().join('');
+    if (code.length < 6) {
+      this.error.set('Please enter the full 6-digit code.');
+      return;
+    }
+
+    this.error.set(null);
+    this.loading.set(true);
+
+    const payload: MfaVerificationRequest = {
+      email: this.userEmail(),
+      code: code
+    };
+
+    this.authApi.verifyMfa(payload).subscribe({
+      next: (res) => {
+        this.loading.set(false);
         this.tokenService.setToken(res.token);
         this.router.navigate(['/merchants']);
       },
       error: (err) => {
-        console.log('LOGIN ERROR FULL >>>', err);
-        this.loading = false;
-        this.error = JSON.stringify(err);
-      },
+        this.loading.set(false);
+        this.handleError(err);
+      }
     });
+  }
+
+  private handleError(err: any): void {
+    if (err.status === 401 || err.status === 403) {
+      this.error.set('Invalid credentials or verification code.');
+    } else {
+      this.error.set(err.error?.message || 'An unexpected error occurred.');
+    }
   }
 }

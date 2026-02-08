@@ -3,6 +3,7 @@ package com.sep.psp.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 @Getter
@@ -24,8 +25,8 @@ public class Payment {
     @Column(nullable = false)
     private String merchantKey;
 
-    @Column(nullable = false)
-    private double amount;
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal amount;
 
     @Column(nullable = false)
     private String currency;
@@ -46,11 +47,11 @@ public class Payment {
     @Column(nullable = false, length = 2048)
     private String errorUrl;
 
-    @Column(name = "bank_payment_id")
-    private Long bankPaymentId;
+    @Column(name = "external_payment_id")
+    private String externalPaymentId;
 
-    @Column(length = 2048)
-    private String bankRedirectUrl;
+    @Column(name = "external_redirect_url", length = 2048)
+    private String externalRedirectUrl;
 
     @Column(nullable = false)
     private String stan;
@@ -62,5 +63,7 @@ public class Payment {
     private String globalTransactionId;
 
     private Instant acquirerTimestamp;
+
+    private String paymentMethod;
 
 }

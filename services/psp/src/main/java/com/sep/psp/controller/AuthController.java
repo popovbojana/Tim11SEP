@@ -2,6 +2,7 @@ package com.sep.psp.controller;
 
 import com.sep.psp.dto.auth.AuthResponse;
 import com.sep.psp.dto.auth.LoginRequest;
+import com.sep.psp.dto.auth.MfaVerificationRequest;
 import com.sep.psp.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,11 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return new ResponseEntity<>(authService.login(request), HttpStatus.OK);
+    }
+
+    @PostMapping("/verify-mfa")
+    public ResponseEntity<AuthResponse> verifyMfa(@Valid @RequestBody MfaVerificationRequest request) {
+        return new ResponseEntity<>(authService.verifyMfa(request), HttpStatus.OK);
     }
 
 }

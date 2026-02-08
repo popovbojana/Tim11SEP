@@ -13,11 +13,9 @@ import java.time.Instant;
 public class AuthorizeCardPaymentResponse {
 
     private CardPaymentStatus status;
-
     private FailureReason reason;
-
     private String globalTransactionId;
-
     private Instant acquirerTimestamp;
+    private String redirectUrl;
 
 }
