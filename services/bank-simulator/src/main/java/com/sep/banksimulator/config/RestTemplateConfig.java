@@ -15,6 +15,7 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 import javax.net.ssl.SSLContext;
+import java.time.Duration;
 
 @Configuration
 public class RestTemplateConfig {
@@ -47,7 +48,8 @@ public class RestTemplateConfig {
 
         HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(httpClient);
 
-        requestFactory.setConnectionRequestTimeout(5000);
+        requestFactory.setConnectTimeout((int) Duration.ofSeconds(5).toMillis());
+        requestFactory.setConnectionRequestTimeout((int) Duration.ofSeconds(5).toMillis());
 
         return new RestTemplate(requestFactory);
     }

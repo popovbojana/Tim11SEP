@@ -7,6 +7,14 @@ export interface RedirectResponse {
   redirectUrl: string;
 }
 
+export interface AuthorizeResponse {
+  status: 'SUCCESS' | 'FAILED';
+  globalTransactionId?: string;
+  acquirerTimestamp?: string;
+  reason?: 'INSUFFICIENT_FUNDS' | 'INVALID_CARD_DATA' | 'INVALID_PAN' | 'INVALID_CVV' | 'EXPIRED_CARD' | string;
+  redirectUrl?: string;
+}
+
 export interface ExecutePaymentRequest {
   pan: string;
   securityCode: string;
@@ -19,8 +27,8 @@ export class BankPaymentApi {
   private readonly baseUrl = environment.apiBaseUrl;
   private http = inject(HttpClient);
 
-  execute(bankPaymentId: number, payload: ExecutePaymentRequest): Observable<RedirectResponse> {
-    return this.http.post<RedirectResponse>(
+  execute(bankPaymentId: number, payload: ExecutePaymentRequest): Observable<AuthorizeResponse> {
+    return this.http.post<AuthorizeResponse>(
       `${this.baseUrl}/api/payments/${bankPaymentId}/execute`,
       payload
     );

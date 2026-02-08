@@ -21,5 +21,4 @@ public class ExecuteBankPaymentRequest {
 
     @NotBlank
     private String expiry;
-
 }

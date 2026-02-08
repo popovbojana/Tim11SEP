@@ -4,11 +4,13 @@ import com.sep.banksimulator.dto.*;
 import com.sep.banksimulator.dto.qr.ConfirmQrPaymentRequest;
 import com.sep.banksimulator.dto.qr.QrImageResponse;
 import com.sep.banksimulator.service.BankPaymentService;
+import com.sep.banksimulator.dto.card.AuthorizeCardPaymentResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @RequestMapping("/api/payments")
@@ -36,10 +38,11 @@ public class BankPaymentController {
     }
 
     @PostMapping("/{id}/execute")
-    public ResponseEntity<RedirectResponse> execute(
+    public ResponseEntity<AuthorizeCardPaymentResponse> execute(
             @PathVariable Long id,
             @Valid @RequestBody ExecuteBankPaymentRequest request
     ) {
-        return new ResponseEntity<>(new RedirectResponse(bankPaymentService.execute(id, request)), HttpStatus.OK);
+        AuthorizeCardPaymentResponse response = bankPaymentService.execute(id, request);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
