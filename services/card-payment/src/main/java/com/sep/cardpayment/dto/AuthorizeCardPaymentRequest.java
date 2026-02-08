@@ -31,5 +31,5 @@ public class AuthorizeCardPaymentRequest {
     private String cardHolderName;
 
     @NotBlank
-    private String expiry; // "MM/YY"
+    private String expiry;
 }

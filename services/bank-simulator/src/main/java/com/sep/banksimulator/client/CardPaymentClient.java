@@ -20,14 +20,12 @@ public class CardPaymentClient {
 
     private final RestTemplate restTemplate;
 
-    // Internal Bank API endpoint
     private static final String BANK_AUTH_URL = "http://localhost:8080/card-payment/api/cards/authorize";
 
     public AuthorizeCardPaymentResponse authorize(AuthorizeCardPaymentRequest request) {
         try {
             log.info("Initiating card authorization for amount: {} {}", request.getAmount(), request.getCurrency());
 
-            // Communication with the bank's core system
             AuthorizeCardPaymentResponse response = restTemplate.postForObject(BANK_AUTH_URL, request, AuthorizeCardPaymentResponse.class);
 
             if (response != null) {

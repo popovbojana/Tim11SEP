@@ -20,7 +20,7 @@ public class BankAccount {
     private String accountNumber;
 
     @Column(nullable = false)
-    private Double balance; // OVDE SU PARE
+    private Double balance;
 
     @Column(nullable = false)
     private String currency;

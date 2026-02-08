@@ -171,7 +171,6 @@ public class BankPaymentService {
         }
 
         try {
-            // Pozivamo CardAuthorizationService koji radi SVE provere (PAN, CVV, expiry, balance)
             AuthorizeCardPaymentRequest authReq = AuthorizeCardPaymentRequest.builder()
                     .bankPaymentId(payment.getId())
                     .amount(payment.getAmount())
@@ -188,7 +187,6 @@ public class BankPaymentService {
             if (authRes != null && authRes.getStatus() == CardPaymentStatus.SUCCESS) {
                 log.info("✅ Authorization successful! Finalizing payment...");
 
-                // Samo sada zaključavamo sredstva
                 String hashedPan = hashPan(request.getPan());
                 BankCard card = bankCardRepository.findByPan(hashedPan).orElseThrow();
 
@@ -226,7 +224,6 @@ public class BankPaymentService {
 
         log.info("✅ Payment finalized successfully! New balance: {}", account.getBalance());
 
-        // sendCallbackToPsp(payment); // Zakomentarisano po instrukciji
     }
 
     private AuthorizeCardPaymentResponse markAsFailed(BankPayment payment, FailureReason reason) {
@@ -235,7 +232,6 @@ public class BankPaymentService {
         payment.setStatus(BankPaymentStatus.FAILED);
         bankPaymentRepository.save(payment);
 
-        // sendCallbackToPsp(payment); // Zakomentarisano po instrukciji
 
         return AuthorizeCardPaymentResponse.builder()
                 .status(CardPaymentStatus.FAILED)
