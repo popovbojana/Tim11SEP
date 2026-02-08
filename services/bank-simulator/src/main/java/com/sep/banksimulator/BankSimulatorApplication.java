@@ -1,5 +1,6 @@
 package com.sep.banksimulator;
 
+import com.sep.banksimulator.util.HashUtils;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 

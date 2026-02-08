@@ -21,5 +21,5 @@ public class AuthorizeCardPaymentRequest {
 
     private String cardHolderName;
 
-    private String expiry; // "MM/YY"
+    private String expiry;
 }

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router'; // ⬅️ Dodaj Router
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { BankPaymentApi } from '../../../core/services/bank-payment-api/bank-payment-api';
 
@@ -25,6 +25,7 @@ export class Checkout {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router, // ⬅️ Dodaj Router
     private fb: FormBuilder,
     private bankPaymentApi: BankPaymentApi
   ) {
@@ -68,6 +69,10 @@ export class Checkout {
   submit(): void {
     this.error = null;
 
+    if (this.loading) {
+      return;
+    }
+
     if (!this.bankPaymentId) {
       this.error = 'Missing bank payment id';
       return;
@@ -80,16 +85,40 @@ export class Checkout {
 
     this.loading = true;
 
-    const payload = this.form.getRawValue();
+    const rawValues = this.form.getRawValue();
+    const payload = {
+      ...rawValues,
+      pan: this.onlyDigits(rawValues.pan)
+    };
 
     this.bankPaymentApi.execute(this.bankPaymentId, payload).subscribe({
-      next: (res) => {
+      next: (res: any) => {
         this.loading = false;
-        window.location.href = res.redirectUrl;
-      },
+
+        if (res.status === 'SUCCESS') {
+          alert('✅ Payment successful!');
+          window.location.href = 'http://localhost:4200/reservations';
+        } else {
+         if (res.reason === 'INSUFFICIENT_FUNDS') {
+                 this.error = 'Denied: insufficient funds.';
+               } else if (res.reason === 'INVALID_CARD_DATA') {
+                 this.error = 'Denied: invalid card data.';
+               } else if (res.reason === 'INVALID_PAN') {
+                 this.error = 'Denied: invalid card number.';
+               } else if (res.reason === 'INVALID_CVV') {
+                 this.error = 'Denied: invalid CVV';
+               } else if (res.reason === 'EXPIRED_CARD') {
+                 this.error = 'Denied: card expired.';
+               } else {
+                 this.error = 'Payment denied. Try again.';
+               }
+
+               this.form.controls.securityCode.reset();
+             }
+           },
       error: (err) => {
         this.loading = false;
-        this.error = err?.error?.message ?? 'Payment failed.';
+        this.error = err?.error?.message ?? 'Bank communication error';
       },
     });
   }

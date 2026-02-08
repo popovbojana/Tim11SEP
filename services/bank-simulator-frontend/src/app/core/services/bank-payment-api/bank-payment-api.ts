@@ -7,6 +7,21 @@ export interface RedirectResponse {
   redirectUrl: string;
 }
 
+export interface AuthorizeResponse {
+  status: 'SUCCESS' | 'FAILED';
+  globalTransactionId?: string;
+  acquirerTimestamp?: string;
+  reason?: 'INSUFFICIENT_FUNDS' | 'INVALID_CARD_DATA' | string;
+  redirectUrl?: string;
+}
+export interface AuthorizeResponse {
+  status: 'SUCCESS' | 'FAILED';
+  globalTransactionId?: string;
+  acquirerTimestamp?: string;
+  reason?: 'INSUFFICIENT_FUNDS' | 'INVALID_CARD_DATA' | string;
+  redirectUrl?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class BankPaymentApi {
   private readonly baseUrl = environment.apiBaseUrl;
@@ -21,11 +36,10 @@ export class BankPaymentApi {
       cardHolderName: string;
       expiry: string;
     }
-  ): Observable<RedirectResponse> {
-    return this.http.post<RedirectResponse>(
+  ): Observable<AuthorizeResponse> {
+    return this.http.post<AuthorizeResponse>(
       `${this.baseUrl}/api/payments/${bankPaymentId}/execute`,
       payload
     );
   }
-
 }

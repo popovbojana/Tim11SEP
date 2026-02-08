@@ -7,28 +7,33 @@ import com.sep.banksimulator.dto.card.AuthorizeCardPaymentRequest;
 import com.sep.banksimulator.dto.card.AuthorizeCardPaymentResponse;
 import com.sep.banksimulator.dto.card.CardPaymentStatus;
 import com.sep.banksimulator.dto.qr.*;
-import com.sep.banksimulator.entity.BankPayment;
-import com.sep.banksimulator.entity.BankPaymentStatus;
+import com.sep.banksimulator.entity.*;
 import com.sep.banksimulator.repository.BankPaymentRepository;
+import com.sep.banksimulator.repository.BankAccountRepository;
+import com.sep.banksimulator.repository.BankCardRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BankPaymentService {
 
     private static final String PSP_CALLBACK_URL = "http://localhost:8080/psp/api/bank/callback";
     private static final String PSP_FINALIZE_URL = "http://localhost:8080/psp/api/payments/finalize/";
-
-    private static final Duration CARD_PAYMENT_TIMEOUT = Duration.ofMinutes(1);
-
+    private static final Duration CARD_PAYMENT_TIMEOUT = Duration.ofMinutes(5);
     private static final String QR_CURRENCY = "RSD";
     private static final String RECEIVER_ACCOUNT = "840000003275384578";
     private static final String RECEIVER_NAME = "Vehicle Rental d.o.o.";
@@ -37,6 +42,8 @@ public class BankPaymentService {
     private static final String REFERENCE_NUMBER = null;
 
     private final BankPaymentRepository bankPaymentRepository;
+    private final BankAccountRepository bankAccountRepository;
+    private final BankCardRepository bankCardRepository;
     private final RestTemplate restTemplate;
     private final CardPaymentClient cardPaymentClient;
     private final QrPaymentClient qrServiceClient;
@@ -117,12 +124,6 @@ public class BankPaymentService {
         BankPayment payment = bankPaymentRepository.findById(bankPaymentId)
                 .orElseThrow(() -> new IllegalArgumentException("Bank payment not found"));
 
-        if (payment.getStatus() == BankPaymentStatus.SUCCESS
-                || payment.getStatus() == BankPaymentStatus.FAILED
-                || payment.getStatus() == BankPaymentStatus.ERROR) {
-            throw new IllegalStateException("Bank payment already finished: " + payment.getStatus());
-        }
-
         payment.setStatus(BankPaymentStatus.IN_PROGRESS);
         bankPaymentRepository.save(payment);
 
@@ -145,9 +146,7 @@ public class BankPaymentService {
         if (validateRes == null || !validateRes.isValid()) {
             payment.setStatus(BankPaymentStatus.FAILED);
             bankPaymentRepository.save(payment);
-
             sendCallbackToPsp(payment);
-
             return PSP_FINALIZE_URL + bankPaymentId;
         }
 
@@ -157,36 +156,22 @@ public class BankPaymentService {
         bankPaymentRepository.save(payment);
 
         sendCallbackToPsp(payment);
-
         return PSP_FINALIZE_URL + bankPaymentId;
     }
 
-    @Transactional
-    public String execute(Long bankPaymentId, ExecuteBankPaymentRequest request) {
+    public AuthorizeCardPaymentResponse execute(Long bankPaymentId, ExecuteBankPaymentRequest request) {
+        log.info("💳 Starting card payment execution for bankPaymentId: {}", bankPaymentId);
+
         BankPayment payment = bankPaymentRepository.findById(bankPaymentId)
                 .orElseThrow(() -> new IllegalArgumentException("Bank payment not found"));
 
-        if (payment.getStatus() == BankPaymentStatus.SUCCESS
-                || payment.getStatus() == BankPaymentStatus.FAILED
-                || payment.getStatus() == BankPaymentStatus.ERROR) {
-            throw new IllegalStateException("Bank payment already finished: " + payment.getStatus());
-        }
-
         if (isExpired(payment)) {
-            payment.setStatus(BankPaymentStatus.FAILED);
-            bankPaymentRepository.save(payment);
-
-            sendCallbackToPsp(payment);
-
-            return PSP_FINALIZE_URL + bankPaymentId;
+            log.warn("⏰ Payment expired for bankPaymentId: {}", bankPaymentId);
+            return markAsFailed(payment, FailureReason.EXPIRED_CARD);
         }
 
-
-        payment.setStatus(BankPaymentStatus.IN_PROGRESS);
-        bankPaymentRepository.save(payment);
-
-        AuthorizeCardPaymentResponse authRes;
         try {
+            // Pozivamo CardAuthorizationService koji radi SVE provere (PAN, CVV, expiry, balance)
             AuthorizeCardPaymentRequest authReq = AuthorizeCardPaymentRequest.builder()
                     .bankPaymentId(payment.getId())
                     .amount(payment.getAmount())
@@ -197,39 +182,76 @@ public class BankPaymentService {
                     .expiry(request.getExpiry())
                     .build();
 
-            authRes = cardPaymentClient.authorize(authReq);
+            log.info("🏦 Calling CardAuthorizationService for authorization");
+            AuthorizeCardPaymentResponse authRes = cardPaymentClient.authorize(authReq);
+
+            if (authRes != null && authRes.getStatus() == CardPaymentStatus.SUCCESS) {
+                log.info("✅ Authorization successful! Finalizing payment...");
+
+                // Samo sada zaključavamo sredstva
+                String hashedPan = hashPan(request.getPan());
+                BankCard card = bankCardRepository.findByPan(hashedPan).orElseThrow();
+
+                finalizeSuccessfulPayment(payment.getId(), card.getAccount().getId());
+
+                return authRes;
+            } else {
+                log.warn("❌ Authorization failed. Reason: {}", authRes != null ? authRes.getReason() : "Unknown");
+                FailureReason reason = authRes != null && authRes.getReason() != null
+                        ? authRes.getReason()
+                        : FailureReason.INVALID_CARD_DATA;
+                return markAsFailed(payment, reason);
+            }
+
         } catch (Exception ex) {
-            payment.setStatus(BankPaymentStatus.ERROR);
-            bankPaymentRepository.save(payment);
-
-            sendCallbackToPsp(payment);
-
-            return PSP_FINALIZE_URL + bankPaymentId;
+            log.error("💥 Exception during card authorization: {}", ex.getMessage(), ex);
+            return markAsFailed(payment, FailureReason.SYSTEM_ERROR);
         }
+    }
 
-        if (authRes == null || authRes.getStatus() == null) {
-            payment.setStatus(BankPaymentStatus.ERROR);
-            bankPaymentRepository.save(payment);
+    @Transactional
+    public void finalizeSuccessfulPayment(Long paymentId, Long accountId) {
+        log.info("💰 Finalizing payment - deducting funds from account");
 
-            sendCallbackToPsp(payment);
+        BankPayment payment = bankPaymentRepository.findById(paymentId).orElseThrow();
+        BankAccount account = bankAccountRepository.findById(accountId).orElseThrow();
 
-            return PSP_FINALIZE_URL + bankPaymentId;
-        }
+        account.setBalance(account.getBalance() - payment.getAmount());
+        bankAccountRepository.save(account);
 
-        if (authRes.getStatus() == CardPaymentStatus.SUCCESS) {
-            payment.setStatus(BankPaymentStatus.SUCCESS);
-        } else {
-            payment.setStatus(BankPaymentStatus.FAILED);
-        }
-
-        payment.setGlobalTransactionId(authRes.getGlobalTransactionId());
-        payment.setAcquirerTimestamp(authRes.getAcquirerTimestamp());
-
+        payment.setStatus(BankPaymentStatus.SUCCESS);
+        payment.setGlobalTransactionId(UUID.randomUUID().toString());
+        payment.setAcquirerTimestamp(Instant.now());
         bankPaymentRepository.save(payment);
 
-        sendCallbackToPsp(payment);
+        log.info("✅ Payment finalized successfully! New balance: {}", account.getBalance());
 
-        return PSP_FINALIZE_URL + bankPaymentId;
+        // sendCallbackToPsp(payment); // Zakomentarisano po instrukciji
+    }
+
+    private AuthorizeCardPaymentResponse markAsFailed(BankPayment payment, FailureReason reason) {
+        log.warn("❌ Marking payment as FAILED. Reason: {}", reason);
+
+        payment.setStatus(BankPaymentStatus.FAILED);
+        bankPaymentRepository.save(payment);
+
+        // sendCallbackToPsp(payment); // Zakomentarisano po instrukciji
+
+        return AuthorizeCardPaymentResponse.builder()
+                .status(CardPaymentStatus.FAILED)
+                .reason(reason)
+                .build();
+    }
+
+    private String hashPan(String pan) {
+        try {
+            String cleanPan = pan.replaceAll("\\D", "");
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(cleanPan.getBytes(StandardCharsets.UTF_8));
+            return Base64.getEncoder().encodeToString(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 algorithm not found", e);
+        }
     }
 
     private void sendCallbackToPsp(BankPayment payment) {
@@ -245,13 +267,11 @@ public class BankPaymentService {
 
         try {
             restTemplate.postForObject(PSP_CALLBACK_URL, callback, Void.class);
-        } catch (RestClientException ignored) {
-        }
+        } catch (RestClientException ignored) {}
     }
 
     private boolean isExpired(BankPayment p) {
         if (p.getCreatedAt() == null) return false;
         return Duration.between(p.getCreatedAt(), Instant.now()).compareTo(CARD_PAYMENT_TIMEOUT) > 0;
     }
-
 }
