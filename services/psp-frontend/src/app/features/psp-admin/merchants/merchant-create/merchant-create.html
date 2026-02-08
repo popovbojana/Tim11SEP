@@ -32,13 +32,6 @@
             <p class="errorText">Key is required (min 3 chars, letters/numbers/dot/dash).</p>
           }
         </div>
-        <div class="field">
-          <label class="label">API Password</label>
-          <input class="input" type="password" formControlName="merchantPassword" [class.inputError]="form.controls.merchantPassword.touched && form.controls.merchantPassword.invalid" />
-          @if (form.controls.merchantPassword.touched && form.controls.merchantPassword.invalid) {
-            <p class="errorText">Password must be at least 8 characters.</p>
-          }
-        </div>
       </div>
 
       <div class="divider"></div>

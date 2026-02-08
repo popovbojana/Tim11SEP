@@ -43,7 +43,7 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
         }
         PaymentMethod newMethod = PaymentMethod.builder()
                 .name(name)
-                .serviceName(methodRequest.getServiceName())
+                .serviceName(methodRequest.getServiceName().toUpperCase().trim())
                 .build();
         return toResponse(paymentMethodRepository.save(newMethod));
     }
@@ -85,7 +85,7 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
         }
 
         method.setName(newName);
-        method.setServiceName(methodRequest.getServiceName());
+        method.setServiceName(methodRequest.getServiceName().toUpperCase().trim());
 
         return toResponse(paymentMethodRepository.save(method));
     }

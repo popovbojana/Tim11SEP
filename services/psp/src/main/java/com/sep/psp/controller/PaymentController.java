@@ -16,8 +16,15 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping("/init")
-    public ResponseEntity<InitPaymentResponse> initPayment(@Valid @RequestBody InitPaymentRequest request) {
-        return new ResponseEntity<>(paymentService.initPayment(request), HttpStatus.CREATED);
+    public ResponseEntity<InitPaymentResponse> initPayment(
+            @Valid @RequestBody InitPaymentRequest request,
+            @RequestHeader("X-Merchant-Key") String merchantKey,
+            @RequestHeader("X-Merchant-Password") String merchantPassword
+    ) {
+        return new ResponseEntity<>(
+                paymentService.initPayment(request, merchantKey, merchantPassword),
+                HttpStatus.CREATED
+        );
     }
 
     @GetMapping("/{id}")
@@ -39,7 +46,7 @@ public class PaymentController {
     }
 
     @PostMapping("/callback")
-    public ResponseEntity<Void> callback(@RequestBody GenericCallbackRequest request) {
+    public ResponseEntity<Void> callback(@Valid @RequestBody GenericCallbackRequest request) {
         paymentService.handleCallback(request);
         return new ResponseEntity<>(HttpStatus.OK);
     }

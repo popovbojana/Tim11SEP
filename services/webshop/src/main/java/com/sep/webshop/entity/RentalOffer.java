@@ -22,6 +22,7 @@ public class RentalOffer {
     @Column(nullable = false)
     private String title;
 
+    @Column
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -43,4 +44,5 @@ public class RentalOffer {
 
     @Column(nullable = false)
     private boolean active = true;
+
 }

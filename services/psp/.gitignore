@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+superadmin_credentials.txt
+merchants_credentials.txt

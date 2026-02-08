@@ -6,42 +6,46 @@ import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuil
 import org.apache.hc.client5.http.io.HttpClientConnectionManager;
 import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
-import org.apache.hc.client5.http.ssl.TrustAllStrategy;
 import org.apache.hc.core5.ssl.SSLContexts;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.io.Resource;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 import javax.net.ssl.SSLContext;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 
 @Configuration
 public class RestTemplateConfig {
 
+    @Value("${server.ssl.key-store}")
+    private Resource keyStore;
+
+    @Value("${server.ssl.key-store-password}")
+    private String keyStorePassword;
+
     @Bean
     @LoadBalanced
-    public RestTemplate restTemplate() throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException {
-        return new RestTemplate(requestFactory());
+    public RestTemplate restTemplate() throws Exception {
+        SSLContext sslContext = SSLContexts.custom()
+                .loadKeyMaterial(keyStore.getURL(), keyStorePassword.toCharArray(), keyStorePassword.toCharArray())
+                .loadTrustMaterial(keyStore.getURL(), keyStorePassword.toCharArray())
+                .build();
+
+        SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+        return createRestTemplate(csf);
     }
 
     @Bean(name = "externalRestTemplate")
     @Primary
-    public RestTemplate externalRestTemplate() throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException {
-        return new RestTemplate(requestFactory());
+    public RestTemplate externalRestTemplate() {
+        return new RestTemplate();
     }
 
-    private HttpComponentsClientHttpRequestFactory requestFactory() throws NoSuchAlgorithmException, KeyManagementException, KeyStoreException {
-        SSLContext sslContext = SSLContexts.custom()
-                .loadTrustMaterial(null, TrustAllStrategy.INSTANCE)
-                .build();
-
-        SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
-
+    private RestTemplate createRestTemplate(SSLConnectionSocketFactory csf) {
         HttpClientConnectionManager cm = PoolingHttpClientConnectionManagerBuilder.create()
                 .setSSLSocketFactory(csf)
                 .build();
@@ -50,6 +54,6 @@ public class RestTemplateConfig {
                 .setConnectionManager(cm)
                 .build();
 
-        return new HttpComponentsClientHttpRequestFactory(httpClient);
+        return new RestTemplate(new HttpComponentsClientHttpRequestFactory(httpClient));
     }
 }

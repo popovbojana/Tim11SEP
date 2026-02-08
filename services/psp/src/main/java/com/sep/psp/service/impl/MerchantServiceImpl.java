@@ -11,9 +11,15 @@ import com.sep.psp.repository.MerchantRepository;
 import com.sep.psp.repository.PaymentMethodRepository;
 import com.sep.psp.service.MerchantService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -23,6 +29,7 @@ public class MerchantServiceImpl implements MerchantService {
 
     private final MerchantRepository merchantRepository;
     private final PaymentMethodRepository paymentMethodRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
@@ -31,11 +38,12 @@ public class MerchantServiceImpl implements MerchantService {
             throw new BadRequestException("Merchant with key: " + request.getMerchantKey() + " already exists.");
         }
 
+        String rawPassword = generateSecurePassword();
         Set<PaymentMethod> selectedMethods = mapMethods(request.getMethods());
 
         Merchant merchant = Merchant.builder()
                 .merchantKey(request.getMerchantKey())
-                .merchantPassword(request.getMerchantPassword())
+                .merchantPassword(passwordEncoder.encode(rawPassword))
                 .fullName(request.getFullName())
                 .email(request.getEmail())
                 .successUrl(request.getSuccessUrl())
@@ -46,7 +54,10 @@ public class MerchantServiceImpl implements MerchantService {
                 .activeMethods(selectedMethods)
                 .build();
 
-        return toResponse(merchantRepository.save(merchant));
+        Merchant saved = merchantRepository.save(merchant);
+        saveCredentialsToFile(saved.getMerchantKey(), rawPassword, saved.getFullName());
+
+        return toResponse(saved);
     }
 
     @Override
@@ -132,5 +143,27 @@ public class MerchantServiceImpl implements MerchantService {
                 .bankAccount(merchant.getBankAccount())
                 .activeMethods(methodNames)
                 .build();
+    }
+
+    private String generateSecurePassword() {
+        SecureRandom random = new SecureRandom();
+        byte[] bytes = new byte[24];
+        random.nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    private void saveCredentialsToFile(String key, String rawPassword, String merchantName) {
+        String fileName = "merchants_credentials.txt";
+        try (FileWriter fw = new FileWriter(fileName, true);
+             PrintWriter pw = new PrintWriter(fw)) {
+            pw.println("--------------------------------------------------");
+            pw.println("Merchant: " + merchantName);
+            pw.println("Key:      " + key);
+            pw.println("Password: " + rawPassword);
+            pw.println("Generated: " + java.time.LocalDateTime.now());
+            pw.println("--------------------------------------------------");
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to save merchant credentials to file", e);
+        }
     }
 }

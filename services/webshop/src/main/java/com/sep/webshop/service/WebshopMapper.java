@@ -4,6 +4,7 @@ import com.sep.webshop.dto.*;
 import com.sep.webshop.entity.*;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -48,8 +49,15 @@ public class WebshopMapper {
         return services.stream().map(WebshopMapper::toDTO).collect(Collectors.toList());
     }
 
-    public static double basePricePerDay(RentalOffer offer) {
-        return offer.getVehicle().getPricePerDay() + offer.getInsurancePackage().getPricePerDay();
+    public static BigDecimal basePricePerDay(RentalOffer offer) {
+        if (offer == null || offer.getVehicle() == null || offer.getInsurancePackage() == null) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal vehiclePrice = offer.getVehicle().getPricePerDay();
+        BigDecimal insurancePrice = offer.getInsurancePackage().getPricePerDay();
+
+        return vehiclePrice.add(insurancePrice);
     }
 
     public static RentalOfferDTO toDTO(RentalOffer offer) {
@@ -76,6 +84,7 @@ public class WebshopMapper {
                 .endDate(r.getEndDate())
                 .status(r.getStatus())
                 .totalPrice(r.getTotalPrice())
+                .currency(r.getCurrency())
                 .paymentMethod(r.getPaymentMethod())
                 .paymentReference(r.getPaymentReference())
                 .paidAt(r.getPaidAt())

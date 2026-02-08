@@ -3,6 +3,7 @@ package com.sep.paypal.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 @Getter
@@ -32,6 +33,9 @@ public class PaypalTransaction {
 
     @Column
     private String merchantKey;
+
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal amount;
 
     @Column
     private String currency;

@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -18,7 +20,7 @@ public class GenerateQrRequest {
     private Long pspPaymentId;
 
     @NotNull
-    private Double amount;
+    private BigDecimal amount;
 
     @NotBlank
     private String currency;

@@ -13,20 +13,27 @@ import com.sep.banksimulator.repository.BankPaymentRepository;
 import com.sep.banksimulator.service.BankPaymentService;
 import jakarta.ws.rs.NotAcceptableException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BankPaymentServiceImpl implements BankPaymentService {
 
     private static final String PSP_FINALIZE_URL = "https://localhost:8080/psp/api/payments/finalize/";
-    private static final Duration CARD_PAYMENT_TIMEOUT = Duration.ofMinutes(1);
-    private static final String QR_CURRENCY = "RSD";
+    private static final Duration CARD_PAYMENT_TIMEOUT = Duration.ofMinutes(15);
+
+    @Value("${bank.frontend.url}")
+    private String bankFrontUrl;
 
     private final BankPaymentRepository bankPaymentRepository;
     private final CardPaymentClient cardPaymentClient;
@@ -36,8 +43,14 @@ public class BankPaymentServiceImpl implements BankPaymentService {
     @Override
     @Transactional
     public GenericPaymentResponse initialize(GenericPaymentRequest request) {
+        log.info("Initializing bank payment for PSP Payment ID: {}", request.getPspPaymentId());
+
+        String merchantOrderId = request.getMetadata().get("merchantOrderId");
+        String selectedMethod = request.getMetadata().get("selectedMethod");
+
         BankPayment payment = BankPayment.builder()
                 .pspPaymentId(request.getPspPaymentId())
+                .merchantOrderId(merchantOrderId)
                 .amount(request.getAmount())
                 .currency(request.getCurrency())
                 .stan(request.getStan())
@@ -50,11 +63,9 @@ public class BankPaymentServiceImpl implements BankPaymentService {
 
         BankPayment saved = bankPaymentRepository.save(payment);
 
-        String selectedMethod = request.getMetadata().get("selectedMethod");
-        String redirectUrl = "https://localhost:4400/checkout/" + saved.getId();
-
+        String redirectUrl = bankFrontUrl + "/checkout/" + saved.getId();
         if ("QR".equalsIgnoreCase(selectedMethod)) {
-            redirectUrl = "https://localhost:4400/qr-checkout/" + saved.getId();
+            redirectUrl = bankFrontUrl + "/qr-checkout/" + saved.getId();
         }
 
         return GenericPaymentResponse.builder()
@@ -72,18 +83,20 @@ public class BankPaymentServiceImpl implements BankPaymentService {
                 .bankPaymentId(payment.getId())
                 .pspPaymentId(payment.getPspPaymentId())
                 .amount(payment.getAmount())
-                .currency(QR_CURRENCY)
+                .currency(payment.getCurrency())
                 .stan(payment.getStan())
                 .pspTimestamp(payment.getPspTimestamp().toString())
                 .receiverName(payment.getReceiverName())
                 .receiverAccount(payment.getReceiverAccount())
-                .purpose("Payment for Reservation #" + payment.getPspPaymentId())
+                .purpose("Payment for " + payment.getReceiverName())
                 .paymentCode("289")
                 .build();
 
+        log.info("Requesting QR generation for Payment ID: {}", bankPaymentId);
         GenerateQrResponse res = qrServiceClient.generate(req);
 
         if (res == null || res.getQrImageBase64() == null) {
+            log.error("QR Service returned empty response for Payment ID: {}", bankPaymentId);
             throw new BadRequestException("QR service failed.");
         }
 
@@ -100,25 +113,30 @@ public class BankPaymentServiceImpl implements BankPaymentService {
         checkFinalStatus(payment);
 
         payment.setStatus(BankPaymentStatus.IN_PROGRESS);
-        bankPaymentRepository.save(payment);
+        bankPaymentRepository.saveAndFlush(payment);
 
         ValidateQrRequest validateReq = ValidateQrRequest.builder()
                 .qrText(request.getQrText())
                 .bankPaymentId(payment.getId())
                 .pspPaymentId(payment.getPspPaymentId())
                 .amount(payment.getAmount())
-                .currency(QR_CURRENCY)
+                .currency(payment.getCurrency())
                 .stan(payment.getStan())
                 .receiverName(payment.getReceiverName())
                 .receiverAccount(payment.getReceiverAccount())
+                .createdAt(payment.getCreatedAt())
                 .build();
 
-        ValidateQrResponse validateRes = qrServiceClient.validate(validateReq);
-
-        if (validateRes == null || !validateRes.isValid()) {
-            finalizePayment(payment, BankPaymentStatus.FAILED, null, null);
-        } else {
-            finalizePayment(payment, BankPaymentStatus.SUCCESS, UUID.randomUUID().toString(), Instant.now());
+        try {
+            ValidateQrResponse validateRes = qrServiceClient.validate(validateReq);
+            if (validateRes != null && validateRes.isValid()) {
+                finalizePayment(payment, BankPaymentStatus.SUCCESS, UUID.randomUUID().toString(), Instant.now(), "QR");
+            } else {
+                finalizePayment(payment, BankPaymentStatus.FAILED, null, null, "QR");
+            }
+        } catch (Exception e) {
+            log.error("QR Validation error: {}", e.getMessage());
+            finalizePayment(payment, BankPaymentStatus.ERROR, null, null, "QR");
         }
 
         return PSP_FINALIZE_URL + payment.getPspPaymentId();
@@ -131,12 +149,13 @@ public class BankPaymentServiceImpl implements BankPaymentService {
         checkFinalStatus(payment);
 
         if (isExpired(payment)) {
-            finalizePayment(payment, BankPaymentStatus.FAILED, null, null);
+            log.warn("Payment session expired for ID: {}", bankPaymentId);
+            finalizePayment(payment, BankPaymentStatus.FAILED, null, null, "CARD");
             return PSP_FINALIZE_URL + payment.getPspPaymentId();
         }
 
         payment.setStatus(BankPaymentStatus.IN_PROGRESS);
-        bankPaymentRepository.save(payment);
+        bankPaymentRepository.saveAndFlush(payment);
 
         try {
             AuthorizeCardPaymentRequest authReq = AuthorizeCardPaymentRequest.builder()
@@ -152,25 +171,31 @@ public class BankPaymentServiceImpl implements BankPaymentService {
             AuthorizeCardPaymentResponse authRes = cardPaymentClient.authorize(authReq);
 
             if (authRes != null && authRes.getStatus() == CardPaymentStatus.SUCCESS) {
-                finalizePayment(payment, BankPaymentStatus.SUCCESS, authRes.getGlobalTransactionId(), authRes.getAcquirerTimestamp());
+                finalizePayment(payment, BankPaymentStatus.SUCCESS, authRes.getGlobalTransactionId(), authRes.getAcquirerTimestamp(), "CARD");
             } else {
-                finalizePayment(payment, BankPaymentStatus.FAILED, null, null);
+                finalizePayment(payment, BankPaymentStatus.FAILED, null, null, "CARD");
             }
         } catch (Exception ex) {
-            finalizePayment(payment, BankPaymentStatus.ERROR, null, null);
+            log.error("Critical error during card execution for ID {}: {}", bankPaymentId, ex.getMessage());
+            finalizePayment(payment, BankPaymentStatus.ERROR, null, null, "CARD");
         }
 
         return PSP_FINALIZE_URL + payment.getPspPaymentId();
     }
 
-    private void finalizePayment(BankPayment payment, BankPaymentStatus status, String gid, Instant timestamp) {
+    private void finalizePayment(BankPayment payment, BankPaymentStatus status, String gid, Instant timestamp, String method) {
         payment.setStatus(status);
         payment.setGlobalTransactionId(gid);
         payment.setAcquirerTimestamp(timestamp);
-        bankPaymentRepository.save(payment);
+        bankPaymentRepository.saveAndFlush(payment);
+
+        log.info("Payment {} finalized with status {}", payment.getId(), status);
 
         GenericCallbackRequest callback = GenericCallbackRequest.builder()
                 .pspPaymentId(payment.getPspPaymentId())
+                .merchantOrderId(payment.getMerchantOrderId())
+                .amount(payment.getAmount())
+                .paymentMethod(method)
                 .externalPaymentId(payment.getId().toString())
                 .status(status.name())
                 .globalTransactionId(gid)
@@ -179,16 +204,22 @@ public class BankPaymentServiceImpl implements BankPaymentService {
                 .acquirerTimestamp(timestamp)
                 .build();
 
-        try {
-            pspClient.sendCallback(callback);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                try {
+                    pspClient.sendCallback(callback);
+                    log.info("Callback sent to PSP for Payment ID: {}", payment.getId());
+                } catch (Exception e) {
+                    log.error("Failed to send callback to PSP: {}. Reconciliation required.", e.getMessage());
+                }
+            }
+        });
     }
 
     private BankPayment getById(Long id) {
         return bankPaymentRepository.findById(id)
-                .orElseThrow(() -> new NotAcceptableException("Payment with id: " + id + "not found."));
+                .orElseThrow(() -> new NotAcceptableException("Payment with id: " + id + " not found."));
     }
 
     private void checkFinalStatus(BankPayment p) {

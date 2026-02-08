@@ -2,6 +2,7 @@ package com.sep.crypto.dto;
 
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 @Getter
@@ -14,6 +15,7 @@ public class GenericCallbackRequest {
     private Long pspPaymentId;
     private String merchantOrderId;
     private String externalPaymentId;
+    private BigDecimal amount;
     private String status;
     private String globalTransactionId;
     private String stan;

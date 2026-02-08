@@ -1,10 +1,11 @@
-package com.sep.cardpayment.service;
+package com.sep.cardpayment.service.impl;
 
 import com.sep.cardpayment.dto.AuthorizeCardPaymentRequest;
 import com.sep.cardpayment.dto.AuthorizeCardPaymentResponse;
 import com.sep.cardpayment.enums.CardBrand;
 import com.sep.cardpayment.enums.CardPaymentStatus;
 import com.sep.cardpayment.enums.FailureReason;
+import com.sep.cardpayment.service.CardAuthorizationService;
 import com.sep.cardpayment.util.CardBrandDetector;
 import com.sep.cardpayment.util.ExpiryUtil;
 import com.sep.cardpayment.util.Luhn;
@@ -16,9 +17,9 @@ import java.util.Set;
 import java.util.UUID;
 
 @Service
-public class CardAuthorizationServiceImpl implements CardAuthorizationService{
+public class CardAuthorizationServiceImpl implements CardAuthorizationService {
 
-    private static final Set<String> SUPPORTED_CURRENCIES = Set.of("€", "EUR");
+    private static final Set<String> SUPPORTED_CURRENCIES = Set.of("RSD", "EUR");
 
     @Override
     public AuthorizeCardPaymentResponse authorize(AuthorizeCardPaymentRequest req) {

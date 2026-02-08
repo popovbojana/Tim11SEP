@@ -2,19 +2,10 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-
-export type LoginRequest = {
-  email: string;
-  password: string;
-};
-
-export type AuthResponse = {
-  token: string;
-};
+import { LoginRequest, AuthResponse, MfaVerificationRequest } from '../../../shared/models/auth';
 
 @Injectable({ providedIn: 'root' })
 export class AuthApiService {
-  // PSP backend base URL
   private readonly baseUrl = environment.apiBaseUrl;
 
   constructor(private http: HttpClient) {}
@@ -22,6 +13,13 @@ export class AuthApiService {
   login(payload: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(
       `${this.baseUrl}/api/auth/login`,
+      payload
+    );
+  }
+
+  verifyMfa(payload: MfaVerificationRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(
+      `${this.baseUrl}/api/auth/verify-mfa`,
       payload
     );
   }

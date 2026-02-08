@@ -20,12 +20,20 @@ public class PaypalController {
 
     @PostMapping("/init")
     public ResponseEntity<GenericPaymentResponse> createOrder(@RequestBody GenericPaymentRequest request) {
-        return ResponseEntity.ok(paypalService.createOrder(request));
+        return new ResponseEntity<>(paypalService.createOrder(request), HttpStatus.OK);
     }
 
     @GetMapping("/confirm")
     public ResponseEntity<Void> confirmPayment(@RequestParam("token") String token) {
         String redirectUrl = paypalService.captureOrder(token);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(URI.create(redirectUrl));
+        return new ResponseEntity<>(headers, HttpStatus.FOUND);
+    }
+
+    @GetMapping("/cancel")
+    public ResponseEntity<Void> cancelPayment(@RequestParam("token") String token) {
+        String redirectUrl = paypalService.cancelOrder(token);
         HttpHeaders headers = new HttpHeaders();
         headers.setLocation(URI.create(redirectUrl));
         return new ResponseEntity<>(headers, HttpStatus.FOUND);

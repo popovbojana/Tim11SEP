@@ -1,6 +1,9 @@
 package com.sep.psp.dto.payment;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import java.math.BigDecimal;
 import java.time.Instant;
 
 @Getter
@@ -10,14 +13,28 @@ import java.time.Instant;
 @Builder
 public class GenericCallbackRequest {
 
+    @NotNull(message = "PSP Payment id is required.")
     private Long pspPaymentId;
-    private String merchantOrderId;
-    private String externalPaymentId;
-    private String status;
-    private String globalTransactionId;
-    private String stan;
-    private String paymentMethod;
-    private Instant pspTimestamp;
-    private Instant acquirerTimestamp;
 
+    @NotBlank(message = "Merchant order id is required.")
+    private String merchantOrderId;
+
+    @NotNull(message = "Amount is required.")
+    private BigDecimal amount;
+
+    private String externalPaymentId;
+
+    @NotBlank(message = "Status is required.")
+    private String status;
+
+    private String globalTransactionId;
+
+    private String stan;
+
+    @NotBlank(message = "Payment method is required.")
+    private String paymentMethod;
+
+    private Instant pspTimestamp;
+
+    private Instant acquirerTimestamp;
 }

@@ -3,6 +3,7 @@ package com.sep.banksimulator.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 @Getter
@@ -21,8 +22,11 @@ public class BankPayment {
     @Column(name = "psp_payment_id", nullable = false)
     private Long pspPaymentId;
 
-    @Column(nullable = false)
-    private double amount;
+    @Column(name = "merchant_order_id", nullable = false)
+    private String merchantOrderId;
+
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal amount;
 
     @Column(nullable = false)
     private String currency;
@@ -43,8 +47,8 @@ public class BankPayment {
     @Column
     private Instant acquirerTimestamp;
 
-    @Column(nullable = false)
-    private Instant createdAt;
+    @Builder.Default
+    private Instant createdAt = Instant.now();
 
     @Column
     private String receiverName;

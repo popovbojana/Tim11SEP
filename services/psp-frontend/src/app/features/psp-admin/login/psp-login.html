@@ -2,48 +2,53 @@
   <div class="authCard">
     <header class="authHeader">
       <p class="authSubtitle">
-        Sign in to manage merchants and payment methods.
+        {{ showMfa() ? 'Check your email for the verification code.' : 'Sign in to manage merchants and payment methods.' }}
       </p>
     </header>
 
-    @if (error) {
+    @if (error()) {
       <div class="alert">
-        {{ error }}
+        {{ error() }}
       </div>
     }
 
-    <form [formGroup]="form" (ngSubmit)="submit()" class="authForm">
-      <div class="field">
-        <label class="label" for="email">Email address</label>
-        <input 
-          id="email" 
-          class="input" 
-          type="email" 
-          formControlName="email" 
-          [class.inputError]="form.controls.email.touched && form.controls.email.invalid"
-        />
-        @if (form.controls.email.touched && form.controls.email.invalid) {
-          <span class="errorText">Please enter a valid email.</span>
-        }
-      </div>
+    @if (!showMfa()) {
+      <form [formGroup]="loginForm" (ngSubmit)="submitLogin()" class="authForm">
+        <div class="field">
+          <label class="label" for="email">Email address</label>
+          <input id="email" class="input" type="email" formControlName="email" />
+        </div>
 
-      <div class="field">
-        <label class="label" for="password">Password</label>
-        <input 
-          id="password" 
-          class="input" 
-          type="password" 
-          formControlName="password" 
-          [class.inputError]="form.controls.password.touched && form.controls.password.invalid"
-        />
-        @if (form.controls.password.touched && form.controls.password.invalid) {
-          <span class="errorText">Password is required.</span>
-        }
-      </div>
+        <div class="field">
+          <label class="label" for="password">Password</label>
+          <input id="password" class="input" type="password" formControlName="password" />
+        </div>
 
-      <button class="btnPrimary" type="submit" [disabled]="loading">
-        {{ loading ? 'Signing in...' : 'Login' }}
-      </button>
-    </form>
+        <button class="btnPrimary" type="submit" [disabled]="loading()">
+          {{ loading() ? 'Signing in...' : 'Login' }}
+        </button>
+      </form>
+    } @else {
+      <div class="mfaContainer">
+        <div class="otpInputs">
+          @for (step of otpSteps; track step) {
+            <input 
+              type="text" 
+              class="otpInput" 
+              maxlength="1" 
+              (input)="onOtpInput($event, step)"
+              (keydown)="onKeyDown($event, step)"
+              placeholder="-"
+            />
+          }
+        </div>
+
+        <button class="btnPrimary" (click)="submitMfa()" [disabled]="loading()">
+          {{ loading() ? 'Verifying...' : 'Verify Code' }}
+        </button>
+        
+        <button type="button" class="btnSecondary" (click)="showMfa.set(false)">Back to Login</button>
+      </div>
+    }
   </div>
 </section>
