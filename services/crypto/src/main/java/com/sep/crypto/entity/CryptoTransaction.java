@@ -2,6 +2,8 @@ package com.sep.crypto.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
@@ -34,7 +36,7 @@ public class CryptoTransaction {
     private String currency;
 
     @Column
-    private Double amount;
+    private BigDecimal amount;
 
     @Column
     private Instant createdAt;

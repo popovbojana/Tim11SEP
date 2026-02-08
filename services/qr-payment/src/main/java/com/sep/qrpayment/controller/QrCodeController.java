@@ -4,7 +4,7 @@ import com.sep.qrpayment.dto.GenerateQrRequest;
 import com.sep.qrpayment.dto.GenerateQrResponse;
 import com.sep.qrpayment.dto.ValidateQrRequest;
 import com.sep.qrpayment.dto.ValidateQrResponse;
-import com.sep.qrpayment.service.impl.QrCodeServiceImpl;
+import com.sep.qrpayment.service.QrCodeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class QrCodeController {
 
-    private final QrCodeServiceImpl qrCodeService;
+    private final QrCodeService qrCodeService;
 
     @PostMapping("/generate")
     public ResponseEntity<GenerateQrResponse> generate(@Valid @RequestBody GenerateQrRequest request) {

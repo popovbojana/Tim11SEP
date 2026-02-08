@@ -2,6 +2,8 @@ package com.sep.webshop.dto;
 
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -12,6 +14,6 @@ public class AdditionalServiceDTO {
     private Long id;
     private String name;
     private String description;
-    private double pricePerDay;
+    private BigDecimal pricePerDay;
 
 }

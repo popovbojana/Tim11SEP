@@ -3,6 +3,7 @@ package com.sep.psp.controller;
 import com.sep.psp.dto.paymentMethod.PaymentMethodRequest;
 import com.sep.psp.dto.paymentMethod.PaymentMethodResponse;
 import com.sep.psp.service.PaymentMethodService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +27,7 @@ public class PaymentMethodController {
 
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     @PostMapping
-    public ResponseEntity<PaymentMethodResponse> add(@RequestBody PaymentMethodRequest method) {
+    public ResponseEntity<PaymentMethodResponse> add(@Valid @RequestBody PaymentMethodRequest method) {
         return new ResponseEntity<>(paymentMethodService.add(method), HttpStatus.OK);
     }
 

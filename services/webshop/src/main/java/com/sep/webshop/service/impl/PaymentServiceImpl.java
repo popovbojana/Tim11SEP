@@ -7,6 +7,7 @@ import com.sep.webshop.dto.ReservationDTO;
 import com.sep.webshop.dto.payment.InitPaymentRequest;
 import com.sep.webshop.dto.payment.InitPaymentResponse;
 import com.sep.webshop.service.PaymentService;
+import com.sep.webshop.service.RentalReservationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +22,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PspConfig pspConfig;
     private final PspClient pspClient;
-    private final RentalReservationServiceImpl reservationService;
+    private final RentalReservationService reservationService;
 
     @Override
     @Transactional
@@ -35,21 +36,12 @@ public class PaymentServiceImpl implements PaymentService {
                 reservationService.create(reservationRequest, customerEmail, merchantOrderId);
         log.info("✅ Reservation created — ID: {}, total: {} €", pendingReservation.getId(), pendingReservation.getTotalPrice());
 
-        String successUrl =
-                "https://localhost:4200/payment/success/" + pendingReservation.getId();
-        String failedUrl =
-                "https://localhost:4200/payment/failed/" + pendingReservation.getId();
-        String errorUrl =
-                "https://localhost:4200/payment/error/" + pendingReservation.getId();
-
         InitPaymentRequest request = InitPaymentRequest.builder()
                 .merchantKey(pspConfig.getMerchantKey())
                 .merchantOrderId(merchantOrderId)
+                .reservationId(pendingReservation.getId())
                 .amount(pendingReservation.getTotalPrice())
-                .currency("€")
-                .successUrl(successUrl)
-                .failedUrl(failedUrl)
-                .errorUrl(errorUrl)
+                .currency(pendingReservation.getCurrency())
                 .build();
 
         log.info("📨 Sending init payment request to PSP — amount: {} €", pendingReservation.getTotalPrice());

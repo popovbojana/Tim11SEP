@@ -3,8 +3,8 @@ package com.sep.webshop.controller;
 import com.sep.webshop.dto.CreateReservationRequest;
 import com.sep.webshop.dto.payment.InitPaymentResponse;
 import com.sep.webshop.dto.payment.GenericCallbackRequest;
-import com.sep.webshop.service.impl.PaymentServiceImpl;
-import com.sep.webshop.service.impl.WebshopPaymentCallbackServiceImpl;
+import com.sep.webshop.service.PaymentService;
+import com.sep.webshop.service.WebshopPaymentCallbackService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,9 +17,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/payments")
 public class PaymentController {
 
-    private final PaymentServiceImpl paymentService;
-
-    private final WebshopPaymentCallbackServiceImpl callbackService;
+    private final PaymentService paymentService;
+    private final WebshopPaymentCallbackService callbackService;
 
     @PostMapping("/init")
     public ResponseEntity<InitPaymentResponse> initPayment(@Valid @RequestBody CreateReservationRequest request,
@@ -28,7 +27,7 @@ public class PaymentController {
     }
 
     @PostMapping("/callback")
-    public ResponseEntity<Void> callback(@RequestBody GenericCallbackRequest request) {
+    public ResponseEntity<Void> callback(@Valid @RequestBody GenericCallbackRequest request) {
         callbackService.handle(request);
         return ResponseEntity.ok().build();
     }

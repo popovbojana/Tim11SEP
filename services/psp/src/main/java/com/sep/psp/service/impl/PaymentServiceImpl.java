@@ -4,12 +4,15 @@ import com.sep.psp.dto.payment.*;
 import com.sep.psp.entity.*;
 import com.sep.psp.exception.BadRequestException;
 import com.sep.psp.exception.NotFoundException;
+import com.sep.psp.exception.UnauthorizedException;
 import com.sep.psp.repository.MerchantRepository;
 import com.sep.psp.repository.PaymentMethodRepository;
 import com.sep.psp.repository.PaymentRepository;
 import com.sep.psp.service.PaymentService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -19,6 +22,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
@@ -27,10 +31,19 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentMethodRepository paymentMethodRepository;
     private final MerchantRepository merchantRepository;
     private final RestTemplate restTemplate;
+    private final PasswordEncoder passwordEncoder;
+    public static final String INVALID_MERCHANT_CREDENTIALS = "Invalid merchant key or password.";
 
     @Override
     @Transactional
-    public InitPaymentResponse initPayment(InitPaymentRequest request) {
+    public InitPaymentResponse initPayment(InitPaymentRequest request, String key, String rawPassword) {
+        Merchant merchant = merchantRepository.findByMerchantKey(key)
+                .orElseThrow(() -> new UnauthorizedException(INVALID_MERCHANT_CREDENTIALS));
+
+        if (!passwordEncoder.matches(rawPassword, merchant.getMerchantPassword())) {
+            throw new UnauthorizedException(INVALID_MERCHANT_CREDENTIALS);
+        }
+
         Payment payment = Payment.builder()
                 .merchantKey(request.getMerchantKey())
                 .merchantOrderId(request.getMerchantOrderId())
@@ -38,14 +51,16 @@ public class PaymentServiceImpl implements PaymentService {
                 .currency(request.getCurrency())
                 .status(PaymentStatus.CREATED)
                 .createdAt(Instant.now())
-                .successUrl(request.getSuccessUrl())
-                .failedUrl(request.getFailedUrl())
-                .errorUrl(request.getErrorUrl())
+                .successUrl(merchant.getSuccessUrl() + "/" + request.getReservationId())
+                .failedUrl(merchant.getFailedUrl() + "/" + request.getReservationId())
+                .errorUrl(merchant.getErrorUrl() + "/" + request.getReservationId())
                 .stan(UUID.randomUUID().toString())
                 .pspTimestamp(Instant.now())
                 .build();
 
         Payment saved = paymentRepository.save(payment);
+        log.info("Payment initialized: ID {}, Merchant Order: {}", saved.getId(), saved.getMerchantOrderId());
+
         return InitPaymentResponse.builder()
                 .paymentId(saved.getId())
                 .redirectUrl("/checkout/" + saved.getId())
@@ -70,6 +85,10 @@ public class PaymentServiceImpl implements PaymentService {
 
         PaymentMethod method = paymentMethodRepository.findByName(methodName.toUpperCase())
                 .orElseThrow(() -> new NotFoundException("Method not supported: " + methodName));
+
+        if (!merchant.getActiveMethods().contains(method)) {
+            throw new BadRequestException("Payment method " + methodName + " is not enabled for this merchant.");
+        }
 
         payment.setStatus(PaymentStatus.IN_PROGRESS);
         payment.setPaymentMethod(methodName.toUpperCase());
@@ -104,9 +123,9 @@ public class PaymentServiceImpl implements PaymentService {
 
             return StartPaymentResponse.builder().redirectUrl(response.getRedirectUrl()).build();
         } catch (Exception e) {
+            log.error("Provider initialization failed for payment {}: {}", paymentId, e.getMessage());
             payment.setStatus(PaymentStatus.ERROR);
             paymentRepository.save(payment);
-            e.printStackTrace();
             throw new BadRequestException("Communication error with provider.");
         }
     }
@@ -115,6 +134,15 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     public void handleCallback(GenericCallbackRequest request) {
         Payment payment = getById(request.getPspPaymentId());
+
+        if (request.getAmount() != null && payment.getAmount().compareTo(request.getAmount()) != 0) {
+            log.error("SECURITY ALERT: Amount mismatch! Payment ID: {}, DB: {}, Request: {}",
+                    payment.getId(), payment.getAmount(), request.getAmount());
+            payment.setStatus(PaymentStatus.ERROR);
+            paymentRepository.save(payment);
+            throw new BadRequestException("Data integrity violation.");
+        }
+
         if (isFinal(payment.getStatus())) return;
 
         payment.setExternalPaymentId(request.getExternalPaymentId());
@@ -128,14 +156,13 @@ public class PaymentServiceImpl implements PaymentService {
         request.setMerchantOrderId(payment.getMerchantOrderId());
         request.setPaymentMethod(payment.getPaymentMethod());
 
-        Merchant merchant = merchantRepository.findByMerchantKey(payment.getMerchantKey())
-                .orElse(null);
+        Merchant merchant = merchantRepository.findByMerchantKey(payment.getMerchantKey()).orElse(null);
 
         if (merchant != null && merchant.getServiceName() != null && !merchant.getServiceName().isBlank()) {
             try {
                 restTemplate.postForObject("https://" + merchant.getServiceName() + "/api/payments/callback", request, Void.class);
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Failed to notify Merchant service: {}", e.getMessage());
             }
         }
     }
@@ -178,7 +205,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private boolean isFinal(PaymentStatus status) {
-        return status == PaymentStatus.SUCCESS || status == PaymentStatus.FAILED || status == PaymentStatus.ERROR || status == PaymentStatus.CANCELED;
+        return status == PaymentStatus.SUCCESS || status == PaymentStatus.FAILED || status == PaymentStatus.ERROR;
     }
 
     private PaymentStatus mapStatus(String status) {

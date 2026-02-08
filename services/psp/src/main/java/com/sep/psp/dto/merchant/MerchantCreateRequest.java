@@ -18,10 +18,6 @@ public class MerchantCreateRequest {
     private String merchantKey;
 
     @NotBlank
-    @Size(min = 8)
-    private String merchantPassword;
-
-    @NotBlank
     private String fullName;
 
     @NotBlank

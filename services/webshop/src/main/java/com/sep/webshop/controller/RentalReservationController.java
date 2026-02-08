@@ -1,7 +1,7 @@
 package com.sep.webshop.controller;
 
 import com.sep.webshop.dto.ReservationDTO;
-import com.sep.webshop.service.impl.RentalReservationServiceImpl;
+import com.sep.webshop.service.RentalReservationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +15,7 @@ import java.util.List;
 @RequestMapping("/api/reservations")
 public class RentalReservationController {
 
-    private final RentalReservationServiceImpl reservationService;
+    private final RentalReservationService reservationService;
 
     @GetMapping(value = "/history")
     public ResponseEntity<List<ReservationDTO>> getHistory(Authentication authentication) {

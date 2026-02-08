@@ -38,6 +38,11 @@ public class GlobalExceptionHandler {
         return handleBadRequestException(new BadRequestException(errorMessageBuilder.toString()));
     }
 
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ErrorMessage> handleUnauthorizedException(UnauthorizedException exception) {
+        return createResponseEntity(createErrorMessage(exception, HttpStatus.UNAUTHORIZED));
+    }
+
     private ResponseEntity<ErrorMessage> createResponseEntity(ErrorMessage errorMessage) {
         return new ResponseEntity<>(errorMessage, errorMessage.getHttpStatus());
     }

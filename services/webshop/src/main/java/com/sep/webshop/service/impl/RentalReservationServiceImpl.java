@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -42,14 +43,14 @@ public class RentalReservationServiceImpl implements RentalReservationService {
 
         long days = ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate());
         if (days <= 0) {
-            log.warn("❌ Invalid dates — start: {}, end: {}", request.getStartDate(), request.getEndDate());
-            throw new BadRequestException("End date must be after start date.");
+
+            days = 1;
         }
 
-        double basePerDay = WebshopMapper.basePricePerDay(offer);
-        double additionalPerDay = calculateAdditionalPricePerDay(offer, request.getSelectedAdditionalServiceIds());
-        double total = (basePerDay + additionalPerDay) * days;
-        log.info("💰 Price calculated — {} days × ({} base + {} additional) = {} total", days, basePerDay, additionalPerDay, total);
+        BigDecimal basePerDay = WebshopMapper.basePricePerDay(offer);
+        BigDecimal additionalPerDay = calculateAdditionalPricePerDay(offer, request.getSelectedAdditionalServiceIds());
+
+        BigDecimal total = basePerDay.add(additionalPerDay).multiply(BigDecimal.valueOf(days));
 
         RentalReservation reservation = RentalReservation.builder()
                 .customerEmail(customerEmail)
@@ -58,27 +59,30 @@ public class RentalReservationServiceImpl implements RentalReservationService {
                 .endDate(request.getEndDate())
                 .status(ReservationStatus.PENDING)
                 .totalPrice(total)
+                .currency("EUR")
                 .merchantOrderId(merchantOrderId)
+                .createdAt(Instant.now())
                 .build();
 
-        RentalReservation saved = rentalReservationRepository.save(reservation);
-        log.info("✅ Reservation created — ID: {}, status: PENDING, total: {}", saved.getId(), total);
 
-        return WebshopMapper.toDTO(saved);
+        log.info("Created reservation for user {} with total price {} EUR", customerEmail, total);
+        return WebshopMapper.toDTO(rentalReservationRepository.save(reservation));
     }
 
     @Override
     @Transactional(readOnly = true)
     public ReservationDTO getById(Long id) {
-        log.info("🔍 Fetching reservation by ID: {}", id);
-        return WebshopMapper.toDTO(rentalReservationRepository.getReferenceById(id));
+
+        return rentalReservationRepository.findById(id)
+                .map(WebshopMapper::toDTO)
+                .orElseThrow(() -> new NotFoundException("Reservation not found."));
     }
 
     @Override
     @Transactional
     public void updateFromPaymentCallback(String merchantOrderId, Long pspPaymentId, ReservationStatus newStatus,
-                                          PaymentMethod method, String reference, Instant paidAt) {
-        log.info("📨 Payment callback — order: {}, PSP payment ID: {}, status: {}", merchantOrderId, pspPaymentId, newStatus);
+
+                                          String method, String reference, Instant paidAt) {
 
         RentalReservation r = rentalReservationRepository.findByMerchantOrderId(merchantOrderId)
                 .orElseThrow(() -> {
@@ -95,6 +99,7 @@ public class RentalReservationServiceImpl implements RentalReservationService {
         r.setPaymentReference(reference);
         r.setPaidAt(paidAt);
 
+        log.info("Updated reservation {} status to {} via callback", merchantOrderId, newStatus);
         rentalReservationRepository.save(r);
         log.info("✅ Reservation updated — ID: {}, new status: {}, method: {}", r.getId(), newStatus, method);
     }
@@ -132,11 +137,14 @@ public class RentalReservationServiceImpl implements RentalReservationService {
         }
     }
 
-    private double calculateAdditionalPricePerDay(RentalOffer offer, Set<Long> selectedAdditionalServiceIds) {
-        if (selectedAdditionalServiceIds == null || selectedAdditionalServiceIds.isEmpty()) return 0.0;
+    private BigDecimal calculateAdditionalPricePerDay(RentalOffer offer, Set<Long> selectedAdditionalServiceIds) {
+        if (selectedAdditionalServiceIds == null || selectedAdditionalServiceIds.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+
         return offer.getAdditionalServices().stream()
                 .filter(s -> selectedAdditionalServiceIds.contains(s.getId()))
-                .mapToDouble(AdditionalService::getPricePerDay)
-                .sum();
+                .map(AdditionalService::getPricePerDay)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

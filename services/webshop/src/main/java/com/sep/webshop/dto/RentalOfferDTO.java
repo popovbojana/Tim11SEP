@@ -2,6 +2,7 @@ package com.sep.webshop.dto;
 
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Getter
@@ -17,6 +18,6 @@ public class RentalOfferDTO {
     private VehicleDTO vehicle;
     private InsurancePackageDTO insurancePackage;
     private List<AdditionalServiceDTO> additionalServices;
-    private double basePricePerDay;
+    private BigDecimal basePricePerDay;
 
 }

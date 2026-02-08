@@ -1,5 +1,4 @@
 import { ReservationStatus } from './reservation-status';
-import { PaymentMethod } from './payment-method';
 import { Vehicle } from './vehicle';
 import { InsurancePackage } from './insurance-package';
 import { AdditionalService } from './additional-service';
@@ -13,11 +12,14 @@ export interface Reservation {
   endDate: string;
   status: ReservationStatus;
   totalPrice: number;
-  paymentMethod: PaymentMethod;
+  currency: string;
+  paymentMethod: string;
   paymentReference: string | null;
   paidAt: string | null;
   createdAt: string;
   vehicle: Vehicle;
   insurancePackage: InsurancePackage;
   additionalServices: AdditionalService[];
+  merchantOrderId: string;
+  pspPaymentId: number;
 }

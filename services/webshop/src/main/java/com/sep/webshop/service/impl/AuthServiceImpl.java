@@ -5,6 +5,7 @@ import com.sep.webshop.dto.auth.LoginRequest;
 import com.sep.webshop.dto.auth.RegisterRequest;
 import com.sep.webshop.entity.User;
 import com.sep.webshop.exception.BadRequestException;
+import com.sep.webshop.exception.UnauthorizedException;
 import com.sep.webshop.repository.UserRepository;
 import com.sep.webshop.security.JwtService;
 import com.sep.webshop.service.AuthService;
@@ -22,6 +23,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private static final String INVALID_CREDENTIALS = "Invalid email or password.";
 
     @Override
     @Transactional
@@ -44,6 +46,7 @@ public class AuthServiceImpl implements AuthService {
 
         userRepository.save(user);
         log.info("✅ User registered — email: {}, name: {} {}", email, user.getFirstName(), user.getLastName());
+
     }
 
     @Override
@@ -68,7 +71,7 @@ public class AuthServiceImpl implements AuthService {
             log.warn("❌ Login failed — wrong password for: {}", email);
             throw new BadRequestException("Invalid credentials.");
         }
-
+              
         String token = jwtService.generateToken(user.getEmail());
         log.info("✅ Login successful — user: {}", email);
 

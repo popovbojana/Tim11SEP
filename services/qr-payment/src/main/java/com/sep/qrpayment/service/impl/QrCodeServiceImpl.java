@@ -30,6 +30,7 @@ public class QrCodeServiceImpl implements QrCodeService {
     @Override
     public GenerateQrResponse generate(GenerateQrRequest request) {
         String qrText = buildIpsPayload(request);
+        System.out.println("DEBUG - IPS QR STRING: " + qrText);
         String base64 = generatePngBase64(qrText, 260, 260);
 
         return GenerateQrResponse.builder()
@@ -40,6 +41,12 @@ public class QrCodeServiceImpl implements QrCodeService {
 
     @Override
     public ValidateQrResponse validate(ValidateQrRequest request) {
+        if (request.getCreatedAt() != null) {
+            java.time.Duration age = java.time.Duration.between(request.getCreatedAt(), java.time.Instant.now());
+            if (age.toMinutes() > 15) {
+                return ValidateQrResponse.builder().valid(false).reason("QR code expired").build();
+            }
+        }
 
         if (request.getQrText() == null || request.getQrText().isBlank()) {
             return ValidateQrResponse.builder().valid(false).reason("Empty QR").build();
@@ -136,11 +143,17 @@ public class QrCodeServiceImpl implements QrCodeService {
         return sb.toString();
     }
 
-    private String buildTagI(String currency, Double amount) {
-        String ccy = (currency == null || currency.isBlank()) ? "RSD" : currency.trim().toUpperCase();
-        BigDecimal bd = BigDecimal.valueOf(amount == null ? 0.0 : amount).setScale(2, RoundingMode.HALF_UP);
+    private String buildTagI(String currency, BigDecimal amount) {
+        BigDecimal finalAmount = (amount == null ? BigDecimal.ZERO : amount);
+
+        if ("EUR".equalsIgnoreCase(currency)) {
+            finalAmount = finalAmount.multiply(new BigDecimal("117"));
+        }
+
+        BigDecimal bd = finalAmount.setScale(2, RoundingMode.HALF_UP);
         String num = bd.toPlainString().replace('.', ',');
-        return ccy + num;
+
+        return "RSD" + num;
     }
 
     private Map<String, String> parseIpsPayload(String text) {

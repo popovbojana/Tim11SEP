@@ -3,6 +3,8 @@ package com.sep.crypto.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -14,7 +16,7 @@ public class CoinGateOrderRequest {
     private String orderId;
 
     @JsonProperty("price_amount")
-    private Double priceAmount;
+    private BigDecimal priceAmount;
 
     @JsonProperty("price_currency")
     private String priceCurrency;
